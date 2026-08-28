@@ -46,7 +46,7 @@
 ## 📁 Project Structure
 
 ```
-free_buff_playground/
+OriginAndOak/
 ├── src/
 │   ├── app/
 │   │   ├── layout.tsx         # Root layout with Geist font, ThemeProvider, CartProvider, Navbar, Drawer & Footer
@@ -80,8 +80,8 @@ free_buff_playground/
 ### 1. Installation
 
 ```bash
-git clone https://github.com/amu3dev/free_buff_playground.git
-cd free_buff_playground
+git clone https://github.com/amu3dev/OriginAndOak.git
+cd OriginAndOak
 npm install
 ```
 
@@ -111,4 +111,4 @@ npx tsc --noEmit  # Full TypeScript type check
 
 ## 📄 License
 
-MIT © [Brew & Bean](https://github.com/amu3dev/free_buff_playground)
+MIT © [Origin & Oak](https://github.com/amu3dev/OriginAndOak)
