@@ -1,6 +1,6 @@
-# ☕ Brew & Bean — Artisan Coffee & Roastery
+# ☕ Origin & Oak — Specialty Coffee Roasters | أوريجن آند أوك
 
-> A modern, boutique coffee shop web application built with **Next.js 16 (Turbopack)**, **React 19**, **Tailwind CSS v4**, and **Framer Motion**. Designed with high-contrast editorial aesthetics, warm amber accents, and an interactive customer ordering journey.
+> A modern, boutique specialty coffee roastery web application built with **Next.js 16 (Turbopack)**, **React 19**, **Tailwind CSS v4**, and **Framer Motion**. Featuring bilingual Arabic/English support, high-contrast editorial aesthetics, warm amber accents, and an interactive customer ordering journey.
 
 ---
 
@@ -60,10 +60,14 @@ OriginAndOak/
 │   │   ├── LoyaltyRewards.tsx # Member tier progress card and redeemable perks
 │   │   ├── StoreLocator.tsx   # Interactive map visual with roastery locations
 │   │   ├── Cart.tsx           # Slide-over cart drawer with in-cart pairings and checkout flow
+│   │   ├── ProductDetailModal.tsx # High-res product lightbox with tasting notes & quantity selector
 │   │   └── Footer.tsx         # Brand footer with navigation and roastery details
 │   └── lib/
 │       ├── cart-context.tsx   # React Context & Hook (useCart) with localStorage persistence & rewards
+│       ├── i18n.tsx           # Bilingual Arabic/English translation system with useI18n hook
 │       └── theme-context.tsx  # Hydration-safe dark/light mode store using useSyncExternalStore
+├── public/
+│   └── images/               # High-resolution artisan product photography
 ├── package.json
 ├── tsconfig.json
 └── README.md
