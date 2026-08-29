@@ -1,6 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useRef } from "react";
+import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import Image from "next/image";
 import { ArrowRight, Sparkles, Plus, Check, Maximize2 } from "lucide-react";
 import { useState } from "react";
@@ -13,6 +14,24 @@ export default function Hero() {
   const { t, tf, lang } = useI18n();
   const [bundleAdded, setBundleAdded] = useState(false);
   const [previewProduct, setPreviewProduct] = useState<ProductDetail | null>(null);
+
+  const sectionRef = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start start", "end start"],
+  });
+
+  // Parallax transforms — each layer moves at a different speed
+  // Slowest (far background) to fastest (foreground content)
+  const glowTopY = useSpring(useTransform(scrollYProgress, [0, 1], [0, -120]), { stiffness: 100, damping: 30 });
+  const glowBottomY = useSpring(useTransform(scrollYProgress, [0, 1], [0, -80]), { stiffness: 100, damping: 30 });
+  const gridY = useSpring(useTransform(scrollYProgress, [0, 1], [0, -40]), { stiffness: 100, damping: 30 });
+  const gridOpacity = useTransform(scrollYProgress, [0, 0.8], [0.3, 0]);
+  const textY = useSpring(useTransform(scrollYProgress, [0, 1], [0, 60]), { stiffness: 100, damping: 30 });
+  const cardY = useSpring(useTransform(scrollYProgress, [0, 1], [0, 100]), { stiffness: 100, damping: 30 });
+  const cardScale = useTransform(scrollYProgress, [0, 0.5, 1], [1, 0.97, 0.94]);
+  const cardRotate = useTransform(scrollYProgress, [0, 1], [0, 1.5]);
+  const fadeOut = useTransform(scrollYProgress, [0.6, 1], [1, 0]);
 
   const handleOrderFeatured = () => {
     addItem({
@@ -67,17 +86,34 @@ export default function Hero() {
   ];
 
   return (
-    <section className="relative min-h-[92vh] flex items-center overflow-hidden bg-zinc-950 text-zinc-100">
-      {/* Ambient radiance & subtle grid */}
+    <section ref={sectionRef} className="relative min-h-[92vh] flex items-center overflow-hidden bg-zinc-950 text-zinc-100">
+      {/* ── Parallax Background Layers ── */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/3 left-1/4 -translate-x-1/2 w-[500px] h-[500px] bg-amber-500/10 rounded-full blur-[120px]" />
-        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-amber-600/5 rounded-full blur-[100px]" />
-        <div className="absolute inset-0 bg-[radial-gradient(#27272a_1px,transparent_1px)] [background-size:24px_24px] opacity-30" />
+        {/* Far glow — slowest drift */}
+        <motion.div
+          style={{ y: glowTopY }}
+          className="absolute top-1/3 left-1/4 -translate-x-1/2 w-[500px] h-[500px] bg-amber-500/10 rounded-full blur-[120px]"
+        />
+        {/* Secondary glow — medium drift */}
+        <motion.div
+          style={{ y: glowBottomY }}
+          className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-amber-600/5 rounded-full blur-[100px]"
+        />
+        {/* Dot grid — subtle drift + fade out on scroll */}
+        <motion.div
+          style={{ y: gridY, opacity: gridOpacity }}
+          className="absolute inset-0 bg-[radial-gradient(#27272a_1px,transparent_1px)] [background-size:24px_24px]"
+        />
       </div>
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 grid lg:grid-cols-12 gap-12 lg:gap-8 items-center">
-        {/* Left Column Text */}
+      {/* ── Content — fades out as you scroll past ── */}
+      <motion.div
+        style={{ opacity: fadeOut }}
+        className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 grid lg:grid-cols-12 gap-12 lg:gap-8 items-center"
+      >
+        {/* Left Column Text — parallax at medium speed */}
         <motion.div
+          style={{ y: textY }}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: "easeOut" }}
@@ -89,7 +125,7 @@ export default function Hero() {
           </div>
 
           <h1 className="text-4xl sm:text-6xl lg:text-7xl font-serif font-bold text-white leading-[1.08] tracking-tight">
-            {t("hero.t1")}{" "}
+            {t("hero.t1")},{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-amber-300 italic font-serif">
               {t("hero.t2")}
             </span>{" "}
@@ -131,8 +167,9 @@ export default function Hero() {
           </div>
         </motion.div>
 
-        {/* Right Column Featured Showcase Card */}
+        {/* Right Column Featured Card — fastest parallax + scale + subtle rotation */}
         <motion.div
+          style={{ y: cardY, scale: cardScale, rotate: cardRotate }}
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.15, ease: "easeOut" }}
@@ -234,7 +271,7 @@ export default function Hero() {
             </div>
           </div>
         </motion.div>
-      </div>
+      </motion.div>
 
       {/* High-Resolution Product Detail Modal */}
       <ProductDetailModal

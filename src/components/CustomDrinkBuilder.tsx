@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useRef, useState } from "react";
+import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import Image from "next/image";
 import { Check, ShoppingCart, Sliders } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
@@ -55,6 +55,11 @@ export default function CustomDrinkBuilder() {
   const { addItem, openCart } = useCart();
   const { t, lang } = useI18n();
 
+  const sectionRef = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start end", "end start"] });
+  const glowY = useSpring(useTransform(scrollYProgress, [0, 1], [60, -60]), { stiffness: 100, damping: 30 });
+  const glowScale = useTransform(scrollYProgress, [0, 0.5, 1], [0.8, 1.1, 0.85]);
+
   const selectedDrinkObj = drinkTypes.find((d) => d.id === drink) ?? drinkTypes[0];
   const basePrice = selectedDrinkObj.basePrice;
   const sizePrice = sizes.find((s) => s.id === size)?.price ?? 0;
@@ -103,10 +108,17 @@ export default function CustomDrinkBuilder() {
 
   return (
     <section
+      ref={sectionRef}
       id="customize"
-      className="py-24 bg-white dark:bg-zinc-950 border-y border-zinc-200/80 dark:border-zinc-800 transition-colors"
+      className="relative py-24 bg-white dark:bg-zinc-950 border-y border-zinc-200/80 dark:border-zinc-800 transition-colors overflow-hidden"
     >
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Parallax ambient glow */}
+      <motion.div
+        style={{ y: glowY, scale: glowScale }}
+        className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-amber-100/30 dark:bg-amber-500/5 rounded-full blur-[120px] pointer-events-none"
+      />
+
+      <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

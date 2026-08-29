@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useRef, useState } from "react";
+import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import { MapPin, Clock, Phone, Navigation } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 
@@ -53,11 +53,22 @@ export default function StoreLocator() {
   const [selectedStore, setSelectedStore] = useState<string>("store-1");
   const { t, lang } = useI18n();
 
+  const sectionRef = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start end", "end start"] });
+  const orbY = useSpring(useTransform(scrollYProgress, [0, 1], [50, -70]), { stiffness: 100, damping: 30 });
+  const orbScale = useTransform(scrollYProgress, [0, 0.5, 1], [0.85, 1.15, 0.9]);
+
   const activeStore = stores.find((s) => `store-${s.id}` === selectedStore) ?? stores[0];
 
   return (
-    <section id="locations" className="py-24 bg-white dark:bg-zinc-950 border-t border-zinc-200/80 dark:border-zinc-800 transition-colors">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section ref={sectionRef} id="locations" className="relative py-24 bg-white dark:bg-zinc-950 border-t border-zinc-200/80 dark:border-zinc-800 transition-colors overflow-hidden">
+      {/* Parallax decorative orb */}
+      <motion.div
+        style={{ y: orbY, scale: orbScale }}
+        className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[450px] h-[450px] bg-amber-100/25 dark:bg-amber-500/5 rounded-full blur-[110px] pointer-events-none"
+      />
+
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useRef, useState } from "react";
+import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import Image from "next/image";
 import { Gift, Crown, Check, Sparkles } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
@@ -28,6 +28,13 @@ export default function LoyaltyRewards() {
   const { applyReward, openCart } = useCart();
   const { t, tf, lang } = useI18n();
 
+  const sectionRef = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start end", "end start"] });
+  const orb1Y = useSpring(useTransform(scrollYProgress, [0, 1], [70, -90]), { stiffness: 100, damping: 30 });
+  const orb2Y = useSpring(useTransform(scrollYProgress, [0, 1], [50, -60]), { stiffness: 100, damping: 30 });
+  const orb1Opacity = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [0, 1, 1, 0]);
+  const orb2Opacity = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0, 0.8, 0.8, 0]);
+
   const currentTier = [...tiers].reverse().find((tier) => points >= tier.min) ?? tiers[0];
   const nextTier = tiers.find((tier) => tier.min > points);
   const progress = nextTier
@@ -53,10 +60,21 @@ export default function LoyaltyRewards() {
 
   return (
     <section
+      ref={sectionRef}
       id="rewards"
-      className="py-24 bg-zinc-50 dark:bg-zinc-950 transition-colors"
+      className="relative py-24 bg-zinc-50 dark:bg-zinc-950 transition-colors overflow-hidden"
     >
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Parallax decorative orbs */}
+      <motion.div
+        style={{ y: orb1Y, opacity: orb1Opacity }}
+        className="absolute top-1/4 -right-20 w-[350px] h-[350px] bg-amber-200/20 dark:bg-amber-500/5 rounded-full blur-[100px] pointer-events-none"
+      />
+      <motion.div
+        style={{ y: orb2Y, opacity: orb2Opacity }}
+        className="absolute bottom-1/4 -left-24 w-[300px] h-[300px] bg-amber-300/15 dark:bg-amber-400/5 rounded-full blur-[80px] pointer-events-none"
+      />
+
+      <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
