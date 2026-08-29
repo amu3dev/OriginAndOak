@@ -5,7 +5,7 @@ import {
   useContext,
   useState,
   useCallback,
-  useEffect,
+  useSyncExternalStore,
   type ReactNode,
 } from "react";
 
@@ -46,65 +46,127 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 const CART_STORAGE_KEY = "brew_and_bean_cart_v1";
+const EMPTY_CART: CartItem[] = [];
+
+let cartSnapshot: CartItem[] = EMPTY_CART;
+let cartLoaded = false;
+const cartListeners = new Set<() => void>();
+
+function isCartItem(value: unknown): value is CartItem {
+  if (typeof value !== "object" || value === null) return false;
+  const item = value as Partial<CartItem>;
+  return (
+    typeof item.id === "string" &&
+    typeof item.name === "string" &&
+    typeof item.price === "number" &&
+    Number.isFinite(item.price) &&
+    item.price >= 0 &&
+    typeof item.quantity === "number" &&
+    Number.isInteger(item.quantity) &&
+    item.quantity > 0 &&
+    (item.customizations === undefined || typeof item.customizations === "string") &&
+    (item.isReward === undefined || typeof item.isReward === "boolean")
+  );
+}
+
+function readStoredCart(): CartItem[] {
+  try {
+    const saved = localStorage.getItem(CART_STORAGE_KEY);
+    if (!saved) return EMPTY_CART;
+
+    const parsed: unknown = JSON.parse(saved);
+    return Array.isArray(parsed) ? parsed.filter(isCartItem) : EMPTY_CART;
+  } catch (e) {
+    console.error("Failed to load cart from localStorage", e);
+    return EMPTY_CART;
+  }
+}
+
+function notifyCartListeners() {
+  cartListeners.forEach((listener) => listener());
+}
+
+function getCartSnapshot(): CartItem[] {
+  if (typeof window === "undefined") return EMPTY_CART;
+  if (!cartLoaded) {
+    cartSnapshot = readStoredCart();
+    cartLoaded = true;
+  }
+  return cartSnapshot;
+}
+
+function getServerCartSnapshot(): CartItem[] {
+  return EMPTY_CART;
+}
+
+function subscribeToCart(callback: () => void) {
+  cartListeners.add(callback);
+
+  const handleStorage = (event: StorageEvent) => {
+    if (event.key !== CART_STORAGE_KEY) return;
+    cartSnapshot = readStoredCart();
+    cartLoaded = true;
+    notifyCartListeners();
+  };
+
+  window.addEventListener("storage", handleStorage);
+  return () => {
+    cartListeners.delete(callback);
+    window.removeEventListener("storage", handleStorage);
+  };
+}
+
+function updateCartSnapshot(next: CartItem[]) {
+  cartSnapshot = next;
+  cartLoaded = true;
+  try {
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(next));
+  } catch (e) {
+    console.error("Failed to save cart to localStorage", e);
+  }
+  notifyCartListeners();
+}
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const saved = localStorage.getItem(CART_STORAGE_KEY);
-        if (saved) return JSON.parse(saved);
-      } catch (e) {
-        console.error("Failed to load cart from localStorage", e);
-      }
-    }
-    return [];
-  });
-
+  const items = useSyncExternalStore(
+    subscribeToCart,
+    getCartSnapshot,
+    getServerCartSnapshot
+  );
   const [isOpen, setIsOpen] = useState(false);
   const [appliedReward, setAppliedReward] = useState<AppliedReward | null>(null);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
-    } catch (e) {
-      console.error("Failed to save cart to localStorage", e);
-    }
-  }, [items]);
 
   const openCart = useCallback(() => setIsOpen(true), []);
   const closeCart = useCallback(() => setIsOpen(false), []);
   const toggleCart = useCallback(() => setIsOpen((prev) => !prev), []);
 
   const addItem = useCallback((item: Omit<CartItem, "quantity">) => {
-    setItems((prev) => {
-      const existing = prev.find(
-        (i) => i.id === item.id && i.customizations === item.customizations
-      );
-      if (existing) {
-        return prev.map((i) =>
+    const prev = getCartSnapshot();
+    const existing = prev.find(
+      (i) => i.id === item.id && i.customizations === item.customizations
+    );
+    const next = existing
+      ? prev.map((i) =>
           i === existing ? { ...i, quantity: i.quantity + 1 } : i
-        );
-      }
-      return [...prev, { ...item, quantity: 1 }];
-    });
+        )
+      : [...prev, { ...item, quantity: 1 }];
+    updateCartSnapshot(next);
   }, []);
 
   const removeItem = useCallback((id: string) => {
-    setItems((prev) => prev.filter((i) => i.id !== id));
+    updateCartSnapshot(getCartSnapshot().filter((i) => i.id !== id));
   }, []);
 
   const updateQuantity = useCallback((id: string, quantity: number) => {
-    if (quantity <= 0) {
-      setItems((prev) => prev.filter((i) => i.id !== id));
-    } else {
-      setItems((prev) =>
-        prev.map((i) => (i.id === id ? { ...i, quantity } : i))
-      );
-    }
+    const prev = getCartSnapshot();
+    const next = quantity <= 0
+      ? prev.filter((i) => i.id !== id)
+      : prev.map((i) => (i.id === id ? { ...i, quantity } : i));
+    updateCartSnapshot(next);
   }, []);
 
   const clearCart = useCallback(() => {
-    setItems([]);
+    updateCartSnapshot(EMPTY_CART);
     setAppliedReward(null);
   }, []);
 

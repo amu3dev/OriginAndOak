@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence, useScroll, useSpring } from "framer-motion";
 import Image from "next/image";
 import { Menu, X, ShoppingCart, Sun, Moon, Languages } from "lucide-react";

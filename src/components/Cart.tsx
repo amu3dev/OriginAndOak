@@ -46,6 +46,7 @@ export default function CartDrawer() {
 
   const [checkoutStep, setCheckoutStep] = useState<"cart" | "checkout" | "success">("cart");
   const [customerName, setCustomerName] = useState("");
+  const [nameError, setNameError] = useState(false);
   const [pickupStore, setPickupStore] = useState("store-1");
   const [orderNumber, setOrderNumber] = useState("");
   const handleClose = useCallback(() => {
@@ -76,6 +77,14 @@ export default function CartDrawer() {
 
   const handlePlaceOrder = (e: React.FormEvent) => {
     e.preventDefault();
+    const trimmedName = customerName.trim();
+    if (!trimmedName) {
+      setNameError(true);
+      return;
+    }
+
+    setNameError(false);
+    setCustomerName(trimmedName);
     const generatedOrder = `BB-${Math.floor(100000 + Math.random() * 900000)}`;
     setOrderNumber(generatedOrder);
     setCheckoutStep("success");
@@ -200,6 +209,8 @@ export default function CartDrawer() {
               <CheckoutFormView
                 customerName={customerName}
                 setCustomerName={setCustomerName}
+                nameError={nameError}
+                setNameError={setNameError}
                 pickupStore={pickupStore}
                 setPickupStore={setPickupStore}
                 total={total}
@@ -340,7 +351,7 @@ function CartReviewView({
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-mono font-bold text-amber-600 dark:text-amber-400 num" data-ltr>
-                      -${appliedReward.discount.toFixed(2)}
+                      -${discount.toFixed(2)}
                     </span>
                     <button
                       onClick={removeReward}
@@ -445,6 +456,8 @@ function CartReviewView({
 function CheckoutFormView({
   customerName,
   setCustomerName,
+  nameError,
+  setNameError,
   pickupStore,
   setPickupStore,
   total,
@@ -453,6 +466,8 @@ function CheckoutFormView({
 }: {
   customerName: string;
   setCustomerName: (val: string) => void;
+  nameError: boolean;
+  setNameError: (value: boolean) => void;
   pickupStore: string;
   setPickupStore: (val: string) => void;
   total: number;
@@ -474,24 +489,40 @@ function CheckoutFormView({
     >
       <div className="space-y-4">
         <div>
-          <label className={`block text-[11px] font-mono font-semibold text-zinc-500 mb-1 ${lang === "ar" ? "normal-case tracking-normal" : "uppercase tracking-wider"}`}>
+          <label htmlFor="customer-name" className={`block text-[11px] font-mono font-semibold text-zinc-500 mb-1 ${lang === "ar" ? "normal-case tracking-normal" : "uppercase tracking-wider"}`}>
             {t("c.nameL")}
           </label>
           <input
+            id="customer-name"
             type="text"
             required
             value={customerName}
-            onChange={(e) => setCustomerName(e.target.value)}
+            onChange={(e) => {
+              setCustomerName(e.target.value);
+              if (e.target.value.trim()) setNameError(false);
+            }}
             placeholder={t("c.nameP")}
-            className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+            aria-invalid={nameError}
+            aria-describedby={nameError ? "checkout-name-error" : undefined}
+            className={`w-full px-3.5 py-2.5 rounded-xl border bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 ${
+              nameError
+                ? "border-red-400 dark:border-red-500"
+                : "border-zinc-200 dark:border-zinc-800"
+            }`}
           />
+          {nameError && (
+            <p id="checkout-name-error" role="alert" className="text-[11px] text-red-600 dark:text-red-400 mt-1">
+              {t("c.nameRequired")}
+            </p>
+          )}
         </div>
 
         <div>
-          <label className={`block text-[11px] font-mono font-semibold text-zinc-500 mb-1 ${lang === "ar" ? "normal-case tracking-normal" : "uppercase tracking-wider"}`}>
+          <label htmlFor="pickup-store" className={`block text-[11px] font-mono font-semibold text-zinc-500 mb-1 ${lang === "ar" ? "normal-case tracking-normal" : "uppercase tracking-wider"}`}>
             {t("c.storeL")}
           </label>
           <select
+            id="pickup-store"
             value={pickupStore}
             onChange={(e) => setPickupStore(e.target.value)}
             className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"

@@ -162,6 +162,7 @@ const en: Record<string, string> = {
   "c.close": "Close cart drawer",
   "c.nameL": "Customer Name",
   "c.nameP": "e.g. Alex Smith",
+  "c.nameRequired": "Please enter your name.",
   "c.storeL": "Pickup Roastery",
   "st.opt1": "Downtown Flagship — 123 Main St",
   "st.opt2": "Riverside Roastery — 456 River Rd",
@@ -179,6 +180,11 @@ const en: Record<string, string> = {
   "c.pts": "Club Points:",
   "c.ptsVal": "+25 pts",
   "c.done": "Done",
+
+  // Product detail modal
+  "p.close": "Close product view",
+  "p.dec": "Decrease quantity",
+  "p.inc": "Increase quantity",
 
   // Rewards
   "r.kicker": "Member Perks",
@@ -402,6 +408,7 @@ const ar: Record<string, string> = {
   "c.close": "إغلاق السلة",
   "c.nameL": "اسم العميل",
   "c.nameP": "مثال: أحمد محمد",
+  "c.nameRequired": "يرجى إدخال اسمك.",
   "c.storeL": "فرض الاستلام",
   "st.opt1": "الفرع الرئيسي وسط المدينة — شارع الرئيسي 123",
   "st.opt2": "محمصة الريف — طريق النهر 456",
@@ -419,6 +426,11 @@ const ar: Record<string, string> = {
   "c.pts": "نقاط النادي:",
   "c.ptsVal": "+٢٥ نقطة",
   "c.done": "تم",
+
+  // Product detail modal
+  "p.close": "إغلاق تفاصيل المنتج",
+  "p.dec": "إنقاص الكمية",
+  "p.inc": "زيادة الكمية",
 
   // Rewards
   "r.kicker": "مزايا الأعضاء",

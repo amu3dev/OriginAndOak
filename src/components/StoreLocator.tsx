@@ -179,7 +179,17 @@ export default function StoreLocator() {
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.08 }}
                 onClick={() => setSelectedStore(`store-${store.id}`)}
-                className={`cursor-pointer rounded-2xl p-5 sm:p-6 transition-all duration-200 border ${
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setSelectedStore(`store-${store.id}`);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+                aria-pressed={isSelected}
+                aria-label={t(`st.${store.id}.name`)}
+                className={`cursor-pointer rounded-2xl p-5 sm:p-6 transition-all duration-200 border focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 ${
                   isSelected
                     ? "bg-white dark:bg-zinc-900 border-amber-500 shadow-md ring-1 ring-amber-500/30"
                     : "bg-zinc-50 dark:bg-zinc-900/50 border-zinc-200/80 dark:border-zinc-800/80 hover:border-zinc-300 dark:hover:border-zinc-700"

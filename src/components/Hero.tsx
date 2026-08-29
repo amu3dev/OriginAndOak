@@ -195,7 +195,7 @@ export default function Hero() {
                   type="button"
                   onClick={openFeaturedPreview}
                   className="relative w-36 h-36 rounded-2xl overflow-hidden border border-zinc-700/80 shadow-lg group/img cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500"
-                  aria-label={`View details of ${t("hero.fName")}`}
+                  aria-label={lang === "ar" ? `عرض تفاصيل ${t("hero.fName")}` : `View details of ${t("hero.fName")}`}
                   title={lang === "ar" ? "انقر لتكبير الصورة والتفاصيل" : "Click to view full photo & details"}
                 >
                   <Image

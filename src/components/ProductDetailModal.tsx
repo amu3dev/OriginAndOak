@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { X, Plus, Minus, ShoppingBag, Sparkles, Check, Flame, Compass } from "lucide-react";
@@ -30,17 +30,65 @@ function ProductDetailDialog({ product, onClose }: { product: ProductDetail; onC
   const { t, lang } = useI18n();
   const [quantity, setQuantity] = useState(1);
   const [isAdded, setIsAdded] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
 
-  // Keyboard Escape listener
+  // Keyboard Escape listener and focus management
   useEffect(() => {
+    const previouslyFocused = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
+    returnFocusRef.current = previouslyFocused;
+    closeButtonRef.current?.focus();
+
+    const focusableSelector = [
+      "a[href]",
+      "button:not([disabled])",
+      "input:not([disabled])",
+      "select:not([disabled])",
+      "textarea:not([disabled])",
+      "[tabindex]:not([tabindex=\"-1\"])",
+    ].join(", ");
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
+        e.preventDefault();
         onClose();
+        return;
+      }
+
+      if (e.key !== "Tab") return;
+
+      const dialog = dialogRef.current;
+      if (!dialog) return;
+
+      const focusable = Array.from(
+        dialog.querySelectorAll<HTMLElement>(focusableSelector)
+      ).filter((element) => element.offsetParent !== null);
+
+      if (focusable.length === 0) {
+        e.preventDefault();
+        dialog.focus();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
+      if (returnFocusRef.current && document.contains(returnFocusRef.current)) {
+        returnFocusRef.current.focus();
+      }
     };
   }, [onClose]);
 
@@ -76,9 +124,11 @@ function ProductDetailDialog({ product, onClose }: { product: ProductDetail; onC
 
       {/* Modal Dialog Panel */}
       <motion.div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="product-detail-title"
+        tabIndex={-1}
         initial={{ opacity: 0, scale: 0.94, y: 16 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.94, y: 16 }}
@@ -87,9 +137,10 @@ function ProductDetailDialog({ product, onClose }: { product: ProductDetail; onC
       >
         {/* Close Button */}
         <button
+          ref={closeButtonRef}
           onClick={onClose}
           className="absolute top-4 right-4 z-20 p-2.5 rounded-full bg-black/40 hover:bg-black/60 text-white backdrop-blur-md transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500 shadow-md"
-          aria-label="Close product view"
+          aria-label={t("p.close")}
         >
           <X className="w-4 h-4" />
         </button>
@@ -174,7 +225,7 @@ function ProductDetailDialog({ product, onClose }: { product: ProductDetail; onC
                   <button
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
                     className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 transition-colors cursor-pointer"
-                    aria-label="Decrease quantity"
+                    aria-label={t("p.dec")}
                   >
                     <Minus className="w-3.5 h-3.5" />
                   </button>
@@ -184,7 +235,7 @@ function ProductDetailDialog({ product, onClose }: { product: ProductDetail; onC
                   <button
                     onClick={() => setQuantity(quantity + 1)}
                     className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 transition-colors cursor-pointer"
-                    aria-label="Increase quantity"
+                    aria-label={t("p.inc")}
                   >
                     <Plus className="w-3.5 h-3.5" />
                   </button>

@@ -264,7 +264,7 @@ export default function MenuSection() {
                         type="button"
                         onClick={() => openProductPreview(item)}
                         className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-zinc-200/80 dark:border-zinc-700/80 group/img cursor-pointer shadow-xs focus-visible:ring-2 focus-visible:ring-amber-500"
-                        aria-label={`View details of ${t(`menu.${item.id}.n`)}`}
+                        aria-label={lang === "ar" ? `عرض تفاصيل ${t(`menu.${item.id}.n`)}` : `View details of ${t(`menu.${item.id}.n`)}`}
                         title={lang === "ar" ? "انقر لتكبير الصورة والتفاصيل" : "Click to view full photo & details"}
                       >
                         <Image
@@ -293,11 +293,14 @@ export default function MenuSection() {
                       )}
                     </div>
 
-                    <h3 
-                      onClick={() => openProductPreview(item)}
-                      className="text-base font-serif font-bold text-zinc-900 dark:text-zinc-100 mt-4 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors cursor-pointer"
-                    >
-                      {t(`menu.${item.id}.n`)}
+                    <h3 className="mt-4">
+                      <button
+                        type="button"
+                        onClick={() => openProductPreview(item)}
+                        className="w-full text-start text-base font-serif font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors cursor-pointer rounded focus-visible:ring-2 focus-visible:ring-amber-500"
+                      >
+                        {t(`menu.${item.id}.n`)}
+                      </button>
                     </h3>
                     <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
                       {t(`menu.${item.id}.d`)}
