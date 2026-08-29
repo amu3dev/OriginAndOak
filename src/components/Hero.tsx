@@ -1,12 +1,12 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import Image from "next/image";
 import { ArrowRight, Sparkles, Plus, Check, Maximize2 } from "lucide-react";
-import { useState } from "react";
 import { useCart } from "@/lib/cart-context";
 import { useI18n } from "@/lib/i18n";
+import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
 import ProductDetailModal, { ProductDetail } from "@/components/ProductDetailModal";
 
 export default function Hero() {
@@ -14,6 +14,7 @@ export default function Hero() {
   const { t, tf, lang } = useI18n();
   const [bundleAdded, setBundleAdded] = useState(false);
   const [previewProduct, setPreviewProduct] = useState<ProductDetail | null>(null);
+  const shouldReduceMotion = usePrefersReducedMotion();
 
   const sectionRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({
@@ -91,32 +92,32 @@ export default function Hero() {
       <div className="absolute inset-0 pointer-events-none">
         {/* Far glow — slowest drift */}
         <motion.div
-          style={{ y: glowTopY }}
+          style={{ y: shouldReduceMotion ? 0 : glowTopY }}
           className="absolute top-1/3 left-1/4 -translate-x-1/2 w-[500px] h-[500px] bg-amber-500/10 rounded-full blur-[120px]"
         />
         {/* Secondary glow — medium drift */}
         <motion.div
-          style={{ y: glowBottomY }}
+          style={{ y: shouldReduceMotion ? 0 : glowBottomY }}
           className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-amber-600/5 rounded-full blur-[100px]"
         />
         {/* Dot grid — subtle drift + fade out on scroll */}
         <motion.div
-          style={{ y: gridY, opacity: gridOpacity }}
+          style={{ y: shouldReduceMotion ? 0 : gridY, opacity: shouldReduceMotion ? 0.3 : gridOpacity }}
           className="absolute inset-0 bg-[radial-gradient(#27272a_1px,transparent_1px)] [background-size:24px_24px]"
         />
       </div>
 
       {/* ── Content — fades out as you scroll past ── */}
       <motion.div
-        style={{ opacity: fadeOut }}
+        style={{ opacity: shouldReduceMotion ? 1 : fadeOut }}
         className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 grid lg:grid-cols-12 gap-12 lg:gap-8 items-center"
       >
         {/* Left Column Text — parallax at medium speed */}
         <motion.div
-          style={{ y: textY }}
-          initial={{ opacity: 0, y: 20 }}
+          style={{ y: shouldReduceMotion ? 0 : textY }}
+          initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease: "easeOut" }}
+          transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.7, ease: "easeOut" }}
           className="lg:col-span-7"
         >
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-zinc-900/90 border border-zinc-800 text-zinc-300 text-xs font-medium tracking-wide mb-6 backdrop-blur-md">
@@ -125,7 +126,7 @@ export default function Hero() {
           </div>
 
           <h1 className="text-4xl sm:text-6xl lg:text-7xl font-serif font-bold text-white leading-[1.08] tracking-tight">
-            {t("hero.t1")},{" "}
+            {t("hero.t1")}{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-amber-300 italic font-serif">
               {t("hero.t2")}
             </span>{" "}
@@ -169,10 +170,10 @@ export default function Hero() {
 
         {/* Right Column Featured Card — fastest parallax + scale + subtle rotation */}
         <motion.div
-          style={{ y: cardY, scale: cardScale, rotate: cardRotate }}
-          initial={{ opacity: 0, scale: 0.95 }}
+          style={{ y: shouldReduceMotion ? 0 : cardY, scale: shouldReduceMotion ? 1 : cardScale, rotate: shouldReduceMotion ? 0 : cardRotate }}
+          initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, delay: 0.15, ease: "easeOut" }}
+          transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.8, delay: 0.15, ease: "easeOut" }}
           className="lg:col-span-5 flex justify-center"
         >
           <div className="relative w-full max-w-md">

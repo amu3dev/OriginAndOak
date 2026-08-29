@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Plus, Check, Maximize2 } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
 import { useI18n } from "@/lib/i18n";
+import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
 import ProductDetailModal, { ProductDetail } from "@/components/ProductDetailModal";
 
 type Category = "espresso" | "cold" | "specialty" | "pastries";
@@ -159,6 +160,7 @@ export default function MenuSection() {
   const [previewProduct, setPreviewProduct] = useState<ProductDetail | null>(null);
   const { addItem } = useCart();
   const { t, lang } = useI18n();
+  const shouldReduceMotion = usePrefersReducedMotion();
 
   const sectionRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start end", "end start"] });
@@ -198,11 +200,11 @@ export default function MenuSection() {
     <section ref={sectionRef} id="menu" className="relative py-24 bg-zinc-50 dark:bg-zinc-950 transition-colors overflow-hidden">
       {/* Parallax decorative orbs */}
       <motion.div
-        style={{ y: orb1Y, scale: orb1Scale }}
+        style={{ y: shouldReduceMotion ? 0 : orb1Y, scale: shouldReduceMotion ? 1 : orb1Scale }}
         className="absolute -top-20 -right-32 w-[400px] h-[400px] bg-amber-200/20 dark:bg-amber-500/5 rounded-full blur-[100px] pointer-events-none"
       />
       <motion.div
-        style={{ y: orb2Y, scale: orb2Scale }}
+        style={{ y: shouldReduceMotion ? 0 : orb2Y, scale: shouldReduceMotion ? 1 : orb2Scale }}
         className="absolute top-1/3 -left-40 w-[350px] h-[350px] bg-amber-300/15 dark:bg-amber-400/5 rounded-full blur-[90px] pointer-events-none"
       />
 

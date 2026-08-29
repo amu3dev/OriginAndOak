@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useI18n } from "@/lib/i18n";
+import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
 
 interface Section {
   id: string;
@@ -21,6 +22,7 @@ export default function SectionNav() {
   const [hoveredSection, setHoveredSection] = useState<string | null>(null);
   const [isVisible, setIsVisible] = useState(false);
   const { t } = useI18n();
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -64,9 +66,9 @@ export default function SectionNav() {
   const scrollTo = useCallback((id: string) => {
     const el = document.getElementById(id);
     if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      el.scrollIntoView({ behavior: prefersReducedMotion ? "auto" : "smooth", block: "start" });
     }
-  }, []);
+  }, [prefersReducedMotion]);
 
   return (
     <AnimatePresence>

@@ -30,7 +30,7 @@ export default function Navbar() {
           {/* Brand Logo */}
           <a
             href="#"
-            className="flex items-center gap-2.5 text-zinc-900 dark:text-zinc-50 group transition-transform hover:opacity-90"
+            className="flex shrink-0 items-center gap-2 sm:gap-2.5 text-zinc-900 dark:text-zinc-50 group transition-transform hover:opacity-90"
           >
             <div className="relative w-9 h-9 rounded-xl overflow-hidden shadow-xs group-hover:scale-105 transition-transform border border-amber-500/40 bg-zinc-950 shrink-0">
               <Image
@@ -41,11 +41,11 @@ export default function Navbar() {
                 className="object-cover scale-150"
               />
             </div>
-            <div className="flex flex-col">
-              <span className="text-lg font-serif font-bold tracking-tight leading-none">
+            <div className="flex min-w-0 flex-col">
+              <span className="whitespace-nowrap text-base sm:text-lg font-serif font-bold tracking-tight leading-none">
                 {lang === "ar" ? "أوريجن آند أوك" : "Origin & Oak"}
               </span>
-              <span className={`text-[10px] font-mono tracking-widest text-zinc-400 dark:text-zinc-500 mt-0.5 ${lang === "ar" ? "normal-case" : "uppercase"}`}>
+              <span className={`hidden sm:block text-[10px] font-mono tracking-widest text-zinc-400 dark:text-zinc-500 mt-0.5 ${lang === "ar" ? "normal-case" : "uppercase"}`}>
                 {t("nav.brandSub")}
               </span>
             </div>
@@ -65,11 +65,11 @@ export default function Navbar() {
           </div>
 
           {/* Right Action Icons */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             {/* Language Switcher */}
             <button
               onClick={() => setLang(lang === "en" ? "ar" : "en")}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-semibold border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500"
+              className="flex items-center gap-1.5 px-2 sm:px-3 py-2 rounded-full text-xs font-semibold border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500"
               aria-label={lang === "en" ? "التبديل إلى العربية" : "Switch to English"}
               title={lang === "en" ? "العربية" : "English"}
             >

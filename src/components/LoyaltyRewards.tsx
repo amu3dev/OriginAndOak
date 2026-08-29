@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Gift, Crown, Check, Sparkles } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
 import { useI18n } from "@/lib/i18n";
+import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
 
 const tiers = [
   { key: "bean", min: 0, emoji: "☕" },
@@ -27,6 +28,7 @@ export default function LoyaltyRewards() {
   const [claimedRewardId, setClaimedRewardId] = useState<string | null>(null);
   const { applyReward, openCart } = useCart();
   const { t, tf, lang } = useI18n();
+  const shouldReduceMotion = usePrefersReducedMotion();
 
   const sectionRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start end", "end start"] });
@@ -66,11 +68,11 @@ export default function LoyaltyRewards() {
     >
       {/* Parallax decorative orbs */}
       <motion.div
-        style={{ y: orb1Y, opacity: orb1Opacity }}
+        style={{ y: shouldReduceMotion ? 0 : orb1Y, opacity: shouldReduceMotion ? 1 : orb1Opacity }}
         className="absolute top-1/4 -right-20 w-[350px] h-[350px] bg-amber-200/20 dark:bg-amber-500/5 rounded-full blur-[100px] pointer-events-none"
       />
       <motion.div
-        style={{ y: orb2Y, opacity: orb2Opacity }}
+        style={{ y: shouldReduceMotion ? 0 : orb2Y, opacity: shouldReduceMotion ? 1 : orb2Opacity }}
         className="absolute bottom-1/4 -left-24 w-[300px] h-[300px] bg-amber-300/15 dark:bg-amber-400/5 rounded-full blur-[80px] pointer-events-none"
       />
 

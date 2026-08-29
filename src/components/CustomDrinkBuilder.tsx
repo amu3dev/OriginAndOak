@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Check, ShoppingCart, Sliders } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
 import { useI18n } from "@/lib/i18n";
+import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
 
 type DrinkType = "latte" | "cappuccino" | "americano" | "cold-brew";
 
@@ -54,6 +55,7 @@ export default function CustomDrinkBuilder() {
   const [isAdded, setIsAdded] = useState(false);
   const { addItem, openCart } = useCart();
   const { t, lang } = useI18n();
+  const shouldReduceMotion = usePrefersReducedMotion();
 
   const sectionRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start end", "end start"] });
@@ -114,7 +116,7 @@ export default function CustomDrinkBuilder() {
     >
       {/* Parallax ambient glow */}
       <motion.div
-        style={{ y: glowY, scale: glowScale }}
+        style={{ y: shouldReduceMotion ? 0 : glowY, scale: shouldReduceMotion ? 1 : glowScale }}
         className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-amber-100/30 dark:bg-amber-500/5 rounded-full blur-[120px] pointer-events-none"
       />
 

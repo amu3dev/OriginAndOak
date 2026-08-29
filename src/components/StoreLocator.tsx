@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import { MapPin, Clock, Phone, Navigation } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
+import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
 
 interface Store {
   id: string;
@@ -52,6 +53,7 @@ const gridRoads = [
 export default function StoreLocator() {
   const [selectedStore, setSelectedStore] = useState<string>("store-1");
   const { t, lang } = useI18n();
+  const shouldReduceMotion = usePrefersReducedMotion();
 
   const sectionRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start end", "end start"] });
@@ -64,7 +66,7 @@ export default function StoreLocator() {
     <section ref={sectionRef} id="locations" className="relative py-24 bg-white dark:bg-zinc-950 border-t border-zinc-200/80 dark:border-zinc-800 transition-colors overflow-hidden">
       {/* Parallax decorative orb */}
       <motion.div
-        style={{ y: orbY, scale: orbScale }}
+        style={{ y: shouldReduceMotion ? 0 : orbY, scale: shouldReduceMotion ? 1 : orbScale }}
         className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[450px] h-[450px] bg-amber-100/25 dark:bg-amber-500/5 rounded-full blur-[110px] pointer-events-none"
       />
 

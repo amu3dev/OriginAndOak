@@ -140,3 +140,8 @@ html[lang="ar"] .tabular-nums {
   display: inline-block;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
