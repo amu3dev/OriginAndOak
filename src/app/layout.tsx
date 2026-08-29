@@ -11,6 +11,7 @@ import { CartProvider } from "@/lib/cart-context";
 import { LanguageProvider } from "@/lib/i18n";
 import Navbar from "@/components/Navbar";
 import CartDrawer from "@/components/Cart";
+import SectionNav from "@/components/SectionNav";
 import Footer from "@/components/Footer";
 
 const geistSans = Geist({
@@ -58,6 +59,7 @@ export default function RootLayout({
             <CartProvider>
               <Navbar />
               <CartDrawer />
+              <SectionNav />
               <main className="flex-1 pt-16">{children}</main>
               <Footer />
             </CartProvider>

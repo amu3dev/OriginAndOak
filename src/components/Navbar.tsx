@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence, useScroll, useSpring } from "framer-motion";
 import Image from "next/image";
 import { Menu, X, ShoppingCart, Sun, Moon, Languages } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
@@ -13,6 +13,8 @@ export default function Navbar() {
   const { itemCount, openCart } = useCart();
   const { dark, toggle } = useTheme();
   const { t, tf, lang, setLang } = useI18n();
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
 
   const navLinks = [
     { label: t("nav.menu"), href: "#menu" },
@@ -147,6 +149,11 @@ export default function Navbar() {
           </motion.div>
         )}
       </AnimatePresence>
+      {/* Scroll Progress Bar */}
+      <motion.div
+        className="absolute bottom-0 left-0 right-0 h-[2px] bg-amber-500 origin-left"
+        style={{ scaleX }}
+      />
     </nav>
   );
 }
