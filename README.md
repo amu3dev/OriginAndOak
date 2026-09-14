@@ -1,6 +1,6 @@
 # ☕ Origin & Oak — Specialty Coffee Roasters | أوريجن آند أوك
 
-> A modern, boutique specialty coffee roastery web application built with **Next.js 16 (Turbopack)**, **React 19**, **Tailwind CSS v4**, and **Framer Motion**. Featuring bilingual Arabic/English support, high-contrast editorial aesthetics, warm amber accents, and an interactive customer ordering journey.
+> An interactive storefront concept/prototype for a specialty coffee brand—not evidence of an operating commerce business. Built with **Next.js 16 (Turbopack)**, **React 19**, **Tailwind CSS v4**, and **Framer Motion**. It demonstrates bilingual Arabic/English support, high-contrast editorial aesthetics, warm amber accents, and an interactive customer ordering journey. Ordering, rewards, and catalog content are demo flows.
 >
 > **[Live demo](https://originandoak.amu3dev.workers.dev/)** · [Source](https://github.com/amu3dev/OriginAndOak)
 
