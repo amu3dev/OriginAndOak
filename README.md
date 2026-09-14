@@ -1,6 +1,8 @@
 # ☕ Origin & Oak — Specialty Coffee Roasters | أوريجن آند أوك
 
 > A modern, boutique specialty coffee roastery web application built with **Next.js 16 (Turbopack)**, **React 19**, **Tailwind CSS v4**, and **Framer Motion**. Featuring bilingual Arabic/English support, high-contrast editorial aesthetics, warm amber accents, and an interactive customer ordering journey.
+>
+> **[Live demo](https://originandoak.amu3dev.workers.dev/)** · [Source](https://github.com/amu3dev/OriginAndOak)
 
 ---
 
@@ -78,7 +80,7 @@ OriginAndOak/
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js 18+ (Node.js 20+ recommended)
+- Node.js 20.9+
 - npm, yarn, pnpm, or bun
 
 ### 1. Installation
@@ -103,6 +105,14 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to explore t
 npm run build
 npm run start
 ```
+
+For the deployed Cloudflare static target, run:
+
+```bash
+CLOUDFLARE_BUILD=1 npm run build
+```
+
+This writes the static site to `out/` for Wrangler.
 
 ### 4. Code Quality & Type Check
 
