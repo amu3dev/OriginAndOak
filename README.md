@@ -1,125 +1,179 @@
-# ☕ Origin & Oak — Specialty Coffee Roasters | أوريجن آند أوك
+<p align="center">
+  <img src="docs/banner.jpg" alt="Origin & Oak storefront shown on desktop in light and dark mode and on a phone in Arabic" width="100%">
+</p>
 
-> An interactive storefront concept/prototype for a specialty coffee brand—not evidence of an operating commerce business. Built with **Next.js 16 (Turbopack)**, **React 19**, **Tailwind CSS v4**, and **Framer Motion**. It demonstrates bilingual Arabic/English support, high-contrast editorial aesthetics, warm amber accents, and an interactive customer ordering journey. Ordering, rewards, and catalog content are demo flows.
->
-> **[Live demo](https://originandoak.amu3dev.workers.dev/)** · [Source](https://github.com/amu3dev/OriginAndOak)
+<h1 align="center">Origin &amp; Oak · أوريجن آند أوك</h1>
 
----
-
-## ✨ Features & Highlights
-
-- **Interactive Barista Lab (Custom Drink Builder)**:
-  - Select coffee foundations (*Latte, Cappuccino, Americano, Cold Brew*).
-  - Customize cup volume (*8oz, 12oz, 16oz*), dairy & plant milks (*Oat, Almond, Soy, Coconut*), and artisanal syrups.
-  - **Live Sensory Profile Visualizer**: Dynamic gauges estimating *Espresso Intensity*, *Sweetness Level*, and *Microfoam Creaminess* in real time.
-- **Artisan Menu**:
-  - Categorized catalog for *Espresso & Milk*, *Cold Brew & Nitro*, *Signature Crafts*, and *Artisan Bakery*.
-  - Micro-animations with instant `"Added ✓"` tactile feedback.
-- **Cart & Slide-Over Checkout**:
-  - Persistent cart state across page reloads via `localStorage`.
-  - **1-Click Bakery Pairings**: In-cart cross-sell suggestions (Croissants, Cinnamon Rolls, Biscotti).
-  - **In-Cart Loyalty Milestone Tracker**: Dynamic progress indicator towards the next free reward.
-  - Multi-step checkout modal: customer details, pickup roastery location, estimated prep time (8–12 min), and generated order confirmation.
-- **Brew Club Loyalty Rewards**:
-  - Dynamic member tier progression (*Bean, Brew, Barista, Legend*).
-  - 1-click reward redemption that automatically applies discount line items to the cart.
-- **Neighborhood Roastery Locator**:
-  - Stylized interactive vector map with clickable location pins and direct Google Maps route links.
-- **Boutique Editorial Aesthetic**:
-  - High-contrast slate & obsidian neutrals, warm linen background `#f7f7f5`, and golden warm amber spot accents.
-  - Native Light / Dark mode toggle powered by `useSyncExternalStore` with zero hydration mismatch.
+<p align="center">
+  A bilingual (English / Arabic) storefront prototype for a specialty coffee roaster.<br>
+  <strong><a href="https://originandoak.amu3dev.workers.dev/">Live demo</a></strong>
+  ·
+  <a href="#-screenshots">Screenshots</a>
+  ·
+  <a href="#-getting-started">Run it locally</a>
+</p>
 
 ---
 
-## 🛠️ Tech Stack
+## 📌 Project status
+
+**Interactive prototype, deployed and maintained.** Every flow works end to end in the browser, but nothing leaves it:
+
+| Works for real | Demo only |
+| :--- | :--- |
+| Menu, drink builder, cart, checkout form and order confirmation | No payment, and orders aren't sent anywhere |
+| Cart, reward points and preferences saved in your browser (`localStorage`) | No accounts; points are per browser and start at a demo balance of 180 |
+| English and Arabic (full right-to-left layout), light and dark mode | Store locations, phone numbers and the map are illustrative |
+| Production build deployed to Cloudflare from `main` | Catalog and prices are sample content |
+
+---
+
+## 📸 Screenshots
+
+All captured from the [live site](https://originandoak.amu3dev.workers.dev/).
+
+| | |
+| :---: | :---: |
+| <img src="docs/screenshots/hero-light.jpg" alt="Hero section with the daily featured latte"><br>**Hero and daily feature** | <img src="docs/screenshots/hero-arabic.jpg" alt="Hero section in Arabic with a right-to-left layout"><br>**Arabic, right to left** |
+| <img src="docs/screenshots/menu.jpg" alt="Menu with category tabs and product cards"><br>**Menu** | <img src="docs/screenshots/product-detail.jpg" alt="Product detail dialog for the Caramel Hazelnut Latte"><br>**Product details** |
+| <img src="docs/screenshots/barista-lab.jpg" alt="Barista Lab drink builder in light mode"><br>**Barista Lab drink builder** | <img src="docs/screenshots/barista-lab-dark.jpg" alt="Barista Lab drink builder in dark mode"><br>**Dark mode** |
+| <img src="docs/screenshots/cart.jpg" alt="Cart drawer with three items, a free espresso shot and a reward discount"><br>**Cart with free espresso and a reward applied** | <img src="docs/screenshots/order-confirmed.jpg" alt="Order confirmation with reference number and points earned"><br>**Order confirmation** |
+| <img src="docs/screenshots/rewards.jpg" alt="Brew Club rewards with tier progress and redeemable perks"><br>**Brew Club rewards** | <img src="docs/screenshots/locations.jpg" alt="Store locator map with three roastery pins"><br>**Store locator** |
+
+<p align="center">
+  <img src="docs/screenshots/mobile-light.jpg" alt="Home page on a phone" width="24%">
+  &nbsp;
+  <img src="docs/screenshots/mobile-menu-dark.jpg" alt="Menu on a phone in dark mode" width="24%">
+  &nbsp;
+  <img src="docs/screenshots/mobile-arabic.jpg" alt="Home page on a phone in Arabic" width="24%">
+  <br><strong>On a phone: light, dark and Arabic</strong>
+</p>
+
+---
+
+## ✨ Features
+
+**Ordering**
+- **Menu** in four categories (*Espresso & Milk*, *Cold Brew & Nitro*, *Signature Crafts*, *Artisan Bakery*), with a detail view for each product.
+- **Barista Lab:** build a drink from a base, size, milk and add-ons, with a live price and an estimated flavour profile (intensity, sweetness, creaminess).
+- **Cart drawer:** adding the same product with the same options increases its quantity instead of adding a duplicate line. Includes one-tap bakery pairings.
+- **Free espresso shot** on orders with a subtotal of $15 or more, with a progress bar in the cart.
+- **Pickup checkout:** name and store selection, then an order confirmation with a reference number and the points earned.
+
+**Brew Club rewards**
+- Earn 10 points per dollar on each order. The balance is kept between visits.
+- Redeem perks for a discount on the current order. Swapping or removing a perk refunds its points, and the discount never exceeds the order subtotal.
+- Four member tiers (*Bean, Brew, Barista, Legend*) with progress to the next one.
+
+**Language, theme and accessibility**
+- Full **English and Arabic** translations, including a right-to-left layout and cart contents that follow the selected language.
+- **Light and dark mode**, following the system setting until you choose.
+- The saved theme and language are applied before the page first appears, so there's no flash of the wrong theme or direction.
+- Dialogs (cart and product details) keep keyboard focus inside, close with Escape, and return focus when closed.
+- Scroll animations are turned off when the system's reduced-motion setting is on.
+
+---
+
+## 🛠️ Tech stack
 
 | Layer | Technology |
 | :--- | :--- |
-| **Framework** | [Next.js 16.3.2](https://nextjs.org/) (App Router, Turbopack) |
-| **Library** | [React 19.2.8](https://react.dev/) |
-| **Styling** | [Tailwind CSS v4](https://tailwindcss.com/) with `@theme inline` design tokens |
-| **Animations** | [Framer Motion 13](https://www.framer.com/motion/) |
-| **Icons** | [Lucide React](https://lucide.dev/) |
-| **Type Safety** | [TypeScript 5](https://www.typescriptlang.org/) |
-| **Linting** | [ESLint 9](https://eslint.org/) (React 19 Rules Compliant) |
+| Framework | [Next.js 16](https://nextjs.org/) (App Router, Turbopack), statically exported |
+| UI | [React 19](https://react.dev/), [Tailwind CSS v4](https://tailwindcss.com/), [Framer Motion](https://motion.dev/), [Lucide](https://lucide.dev/) icons |
+| Language | [TypeScript 5](https://www.typescriptlang.org/) |
+| Quality | [ESLint 9](https://eslint.org/), end-to-end tests with [Playwright Core](https://playwright.dev/) |
+| Hosting | [Cloudflare Workers](https://workers.cloudflare.com/) static assets |
 
 ---
 
-## 📁 Project Structure
+## 📁 Project structure
 
 ```
 OriginAndOak/
 ├── src/
 │   ├── app/
-│   │   ├── layout.tsx         # Root layout with Geist font, ThemeProvider, CartProvider, Navbar, Drawer & Footer
-│   │   ├── page.tsx           # Aggregated landing page
-│   │   └── globals.css        # Tailwind v4 theme palette, tactile linen tones & custom scrollbars
+│   │   ├── layout.tsx              # Fonts, providers, and the pre-paint theme/language script
+│   │   ├── page.tsx                # Landing page made of the sections below
+│   │   └── globals.css             # Tailwind v4 theme tokens and global styles
 │   ├── components/
-│   │   ├── Navbar.tsx         # Fixed glassmorphism navbar with theme switcher and cart badge
-│   │   ├── Hero.tsx           # Hero showcase with Morning Ritual breakfast pairing bundle
-│   │   ├── Menu.tsx           # Categorized artisan menu with tactile add micro-animations
-│   │   ├── CustomDrinkBuilder.tsx # Custom drink creator with live sensory profile metrics
-│   │   ├── LoyaltyRewards.tsx # Member tier progress card and redeemable perks
-│   │   ├── StoreLocator.tsx   # Interactive map visual with roastery locations
-│   │   ├── Cart.tsx           # Slide-over cart drawer with in-cart pairings and checkout flow
-│   │   ├── ProductDetailModal.tsx # High-res product lightbox with tasting notes & quantity selector
-│   │   └── Footer.tsx         # Brand footer with navigation and roastery details
+│   │   ├── Navbar.tsx              # Navigation, language and theme toggles, cart button
+│   │   ├── SectionNav.tsx          # Side dots that track the current section
+│   │   ├── Hero.tsx                # Hero, daily featured drink and breakfast pairing
+│   │   ├── Menu.tsx                # Menu categories and product cards
+│   │   ├── ProductDetailModal.tsx  # Product detail dialog
+│   │   ├── CustomDrinkBuilder.tsx  # Barista Lab drink builder
+│   │   ├── LoyaltyRewards.tsx      # Points, tiers and redeemable perks
+│   │   ├── StoreLocator.tsx        # Map and store cards
+│   │   ├── Cart.tsx                # Cart drawer, checkout form and confirmation
+│   │   └── Footer.tsx
 │   └── lib/
-│       ├── cart-context.tsx   # React Context & Hook (useCart) with localStorage persistence & rewards
-│       ├── i18n.tsx           # Bilingual Arabic/English translation system with useI18n hook
-│       └── theme-context.tsx  # Hydration-safe dark/light mode store using useSyncExternalStore
-├── public/
-│   └── images/               # High-resolution artisan product photography
-├── package.json
-├── tsconfig.json
-└── README.md
+│       ├── cart-context.tsx        # Cart, applied reward and points, saved to localStorage
+│       ├── i18n.tsx                # English and Arabic dictionaries and the useI18n hook
+│       ├── theme-context.tsx       # Light/dark mode
+│       ├── preferences.ts          # Storage keys shared with the pre-paint script
+│       ├── rewards.ts              # Reward catalog and loyalty rules
+│       ├── stores.ts               # Store locations
+│       ├── use-dialog-focus.ts     # Focus trap, Escape and scroll lock for dialogs
+│       └── use-prefers-reduced-motion.ts
+├── scripts/test-e2e.mjs            # End-to-end checks run in Chrome
+├── docs/                           # README banner and screenshots
+├── public/images/                  # Product photography and logo
+└── wrangler.jsonc                  # Cloudflare Workers config
 ```
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Getting started
 
-### Prerequisites
-- Node.js 20.9+
-- npm, yarn, pnpm, or bun
-
-### 1. Installation
+Requires **Node.js 20.9+**.
 
 ```bash
 git clone https://github.com/amu3dev/OriginAndOak.git
 cd OriginAndOak
 npm install
-```
-
-### 2. Run Development Server
-
-```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser to explore the app.
+Then open [http://localhost:3000](http://localhost:3000).
 
-### 3. Build for Production
+### Scripts
+
+| Command | What it does |
+| :--- | :--- |
+| `npm run dev` | Development server with hot reload |
+| `npm run build` | Production build |
+| `npm start` | Serve the production build on port 3000 |
+| `npm run lint` | ESLint |
+| `npx tsc --noEmit` | TypeScript type check |
+| `npm run test:e2e` | End-to-end checks against a running app (see below) |
+
+### End-to-end tests
+
+The e2e script drives Google Chrome through the main flows: ordering, checkout, rewards, saved carts, both languages, keyboard access and dialog focus. Start the app first, then run the tests in a second terminal:
 
 ```bash
-npm run build
-npm run start
+npm run build && npm start
 ```
 
-For the deployed Cloudflare static target, run:
+```bash
+npm run test:e2e
+```
+
+Set `CHROME_PATH` if Chrome isn't in its default location, and `BASE_URL` to test somewhere other than `http://localhost:3000`.
+
+---
+
+## ☁️ Deployment
+
+The live site is a static export served by Cloudflare Workers. Every push to `main` is built and deployed by Cloudflare Workers Builds, and each pull request gets its own preview URL.
+
+To produce the same static output locally:
 
 ```bash
 CLOUDFLARE_BUILD=1 npm run build
 ```
 
-This writes the static site to `out/` for Wrangler.
-
-### 4. Code Quality & Type Check
-
-```bash
-npm run lint      # 0 errors, 0 warnings
-npx tsc --noEmit  # Full TypeScript type check
-```
+This writes the site to `out/`, which `wrangler.jsonc` serves as static assets.
 
 ---
 
