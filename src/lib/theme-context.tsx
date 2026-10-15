@@ -3,11 +3,12 @@
 import {
   createContext,
   useContext,
-  useEffect,
+  useLayoutEffect,
   useCallback,
   useSyncExternalStore,
   type ReactNode,
 } from "react";
+import { THEME_STORAGE_KEY } from "@/lib/preferences";
 
 interface ThemeContextType {
   dark: boolean;
@@ -37,7 +38,7 @@ function subscribe(callback: () => void) {
 
 function getThemeSnapshot(): boolean {
   if (typeof window === "undefined") return false;
-  const stored = localStorage.getItem("theme");
+  const stored = localStorage.getItem(THEME_STORAGE_KEY);
   if (stored) return stored === "dark";
   return window.matchMedia("(prefers-color-scheme: dark)").matches;
 }
@@ -53,13 +54,15 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     getServerSnapshot
   );
 
-  useEffect(() => {
+  // The inline script in the root layout sets this before first paint; this
+  // keeps it in sync afterwards (and re-applies it after the dev remount).
+  useLayoutEffect(() => {
     document.documentElement.classList.toggle("dark", dark);
   }, [dark]);
 
   const toggle = useCallback(() => {
     const nextDark = !getThemeSnapshot();
-    localStorage.setItem("theme", nextDark ? "dark" : "light");
+    localStorage.setItem(THEME_STORAGE_KEY, nextDark ? "dark" : "light");
     document.documentElement.classList.toggle("dark", nextDark);
     notifyListeners();
   }, []);

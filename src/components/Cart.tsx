@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import {
@@ -17,14 +17,27 @@ import {
   Coffee,
   Gift,
 } from "lucide-react";
-import { useCart, CartItem, AppliedReward } from "@/lib/cart-context";
+import { useCart, getLineKey, type CartItem, type AppliedReward, type NewCartItem } from "@/lib/cart-context";
 import { useI18n } from "@/lib/i18n";
+import { useDialogFocus } from "@/lib/use-dialog-focus";
+import { FREE_ESPRESSO_THRESHOLD } from "@/lib/rewards";
+import { stores, DEFAULT_STORE_ID } from "@/lib/stores";
 
 const quickPairings = [
   { id: "pasty-1", price: 3.5, image: "/images/croissant.jpg" },
   { id: "pasty-3", price: 4.0, image: "/images/cinnamon-roll.jpg" },
   { id: "pasty-4", price: 2.5, image: "/images/almond-biscotti.jpg" },
 ];
+
+type Translate = (key: string) => string;
+
+function itemName(item: CartItem, t: Translate) {
+  return item.nameKey ? t(item.nameKey) : item.name ?? item.id;
+}
+
+function itemOptions(item: CartItem, t: Translate) {
+  return item.optionKeys?.length ? item.optionKeys.map(t).join(" • ") : item.customizations;
+}
 
 export default function CartDrawer() {
   const {
@@ -35,41 +48,28 @@ export default function CartDrawer() {
     removeItem,
     updateQuantity,
     clearCart,
+    placeOrder,
     subtotal,
     discount,
     total,
     itemCount,
     appliedReward,
     removeReward,
+    freeEspressoUnlocked,
   } = useCart();
   const { t, tf, lang } = useI18n();
 
   const [checkoutStep, setCheckoutStep] = useState<"cart" | "checkout" | "success">("cart");
   const [customerName, setCustomerName] = useState("");
   const [nameError, setNameError] = useState(false);
-  const [pickupStore, setPickupStore] = useState("store-1");
+  const [pickupStore, setPickupStore] = useState(DEFAULT_STORE_ID);
   const [orderNumber, setOrderNumber] = useState("");
-  const handleClose = useCallback(() => {
-    closeCart();
-    setTimeout(() => {
-      setCheckoutStep("cart");
-    }, 300);
-  }, [closeCart]);
+  const [earnedPoints, setEarnedPoints] = useState(0);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const handleClose = closeCart;
 
-  // Keyboard Escape listener for drawer accessibility
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen) {
-        handleClose();
-      }
-    };
-    if (isOpen) {
-      window.addEventListener("keydown", handleKeyDown);
-    }
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [isOpen, handleClose]);
+  useDialogFocus(dialogRef, { active: isOpen, onClose: closeCart, initialFocusRef: closeButtonRef });
 
   const handleStartCheckout = () => {
     setCheckoutStep("checkout");
@@ -85,18 +85,18 @@ export default function CartDrawer() {
 
     setNameError(false);
     setCustomerName(trimmedName);
-    const generatedOrder = `BB-${Math.floor(100000 + Math.random() * 900000)}`;
+    const generatedOrder = `OO-${Math.floor(100000 + Math.random() * 900000)}`;
     setOrderNumber(generatedOrder);
+    setEarnedPoints(placeOrder());
     setCheckoutStep("success");
-    clearCart();
   };
 
-  const nextMilestoneTarget = 15;
-  const amountToNextReward = Math.max(0, nextMilestoneTarget - total);
-  const milestoneProgress = Math.min(100, (total / nextMilestoneTarget) * 100);
+  const amountToFreeEspresso = Math.max(0, FREE_ESPRESSO_THRESHOLD - subtotal);
+  const milestoneProgress = Math.min(100, (subtotal / FREE_ESPRESSO_THRESHOLD) * 100);
+  const [progressBefore, progressAfter] = t("c.freeProgress").split("{amount}");
 
   return (
-    <AnimatePresence>
+    <AnimatePresence onExitComplete={() => setCheckoutStep("cart")}>
       {isOpen && (
         <>
           {/* Backdrop */}
@@ -111,6 +111,8 @@ export default function CartDrawer() {
 
           {/* Dialog Drawer Panel — slides from the inline-end side for both LTR & RTL */}
           <motion.div
+            ref={dialogRef}
+            tabIndex={-1}
             role="dialog"
             aria-modal="true"
             aria-labelledby="cart-drawer-heading"
@@ -149,6 +151,7 @@ export default function CartDrawer() {
                 </div>
               </div>
               <button
+                ref={closeButtonRef}
                 onClick={handleClose}
                 className="p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 hover:text-zinc-700 dark:hover:text-white transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500"
                 aria-label={t("c.close")}
@@ -163,15 +166,15 @@ export default function CartDrawer() {
                 <div className="flex items-center justify-between text-[11px] font-medium text-amber-900 dark:text-amber-300 mb-1 gap-2">
                   <span className="flex items-center gap-1.5">
                     <Gift className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                    {amountToNextReward > 0 ? (
-                      <>
-                        {lang === "ar" ? "أضف" : "Add"}{" "}
-                        <strong className="num" data-ltr>${amountToNextReward.toFixed(2)}</strong>{" "}
-                        {lang === "ar" ? "لتحصل على إسبريسو مجاني!" : "for a Free Espresso!"}
-                      </>
+                    {amountToFreeEspresso > 0 ? (
+                      <span>
+                        {progressBefore}
+                        <strong className="num" data-ltr>${amountToFreeEspresso.toFixed(2)}</strong>
+                        {progressAfter}
+                      </span>
                     ) : (
                       <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                        🎉 {lang === "ar" ? "فتحت مكافأة مجانية!" : "You unlocked a Free Reward!"}
+                        🎉 {t("c.freeUnlocked")}
                       </span>
                     )}
                   </span>
@@ -195,6 +198,7 @@ export default function CartDrawer() {
                 subtotal={subtotal}
                 discount={discount}
                 total={total}
+                freeEspressoUnlocked={freeEspressoUnlocked}
                 addItem={addItem}
                 removeItem={removeItem}
                 updateQuantity={updateQuantity}
@@ -223,6 +227,7 @@ export default function CartDrawer() {
               <OrderSuccessView
                 customerName={customerName}
                 orderNumber={orderNumber}
+                earnedPoints={earnedPoints}
                 onClose={handleClose}
               />
             )}
@@ -240,6 +245,7 @@ function CartReviewView({
   subtotal,
   discount,
   total,
+  freeEspressoUnlocked,
   addItem,
   removeItem,
   updateQuantity,
@@ -253,7 +259,8 @@ function CartReviewView({
   subtotal: number;
   discount: number;
   total: number;
-  addItem: (item: Omit<CartItem, "quantity">) => void;
+  freeEspressoUnlocked: boolean;
+  addItem: (item: NewCartItem) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, qty: number) => void;
   clearCart: () => void;
@@ -287,9 +294,12 @@ function CartReviewView({
         ) : (
           <>
             <div className="space-y-2.5">
-              {items.map((item) => (
+              {items.map((item) => {
+                const lineKey = getLineKey(item);
+                const options = itemOptions(item, t);
+                return (
                 <motion.div
-                  key={`${item.id}-${item.customizations || ""}`}
+                  key={lineKey}
                   layout
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -299,16 +309,16 @@ function CartReviewView({
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
                       <h3 className="font-serif font-bold text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 truncate">
-                        {item.name}
+                        {itemName(item, t)}
                       </h3>
-                      {item.customizations && (
+                      {options && (
                         <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
-                          {item.customizations}
+                          {options}
                         </p>
                       )}
                     </div>
                     <button
-                      onClick={() => removeItem(item.id)}
+                      onClick={() => removeItem(lineKey)}
                       className="p-1 text-zinc-400 hover:text-red-500 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500"
                       aria-label={t("c.remove")}
                     >
@@ -319,7 +329,7 @@ function CartReviewView({
                   <div className="flex items-center justify-between mt-3 pt-2 border-t border-zinc-200/60 dark:border-zinc-800">
                     <div className="flex items-center gap-1.5 bg-white dark:bg-zinc-800 p-0.5 rounded-full border border-zinc-200 dark:border-zinc-700">
                       <button
-                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                        onClick={() => updateQuantity(lineKey, item.quantity - 1)}
                         className="w-6 h-6 rounded-full flex items-center justify-center hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 transition-colors cursor-pointer"
                         aria-label={t("c.dec")}
                       >
@@ -329,7 +339,7 @@ function CartReviewView({
                         {item.quantity}
                       </span>
                       <button
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        onClick={() => updateQuantity(lineKey, item.quantity + 1)}
                         className="w-6 h-6 rounded-full flex items-center justify-center hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 transition-colors cursor-pointer"
                         aria-label={t("c.inc")}
                       >
@@ -341,13 +351,26 @@ function CartReviewView({
                     </span>
                   </div>
                 </motion.div>
-              ))}
+                );
+              })}
+
+              {freeEspressoUnlocked && (
+                <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-900/50">
+                  <div className="flex items-center gap-2 text-xs text-emerald-800 dark:text-emerald-300 font-medium">
+                    <Coffee className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <span>{t("c.freeShot")}</span>
+                  </div>
+                  <span className="text-xs font-mono font-bold text-emerald-700 dark:text-emerald-400">
+                    {t("c.freeTag")}
+                  </span>
+                </div>
+              )}
 
               {appliedReward && (
                 <div className="flex items-center justify-between p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200/70 dark:border-amber-900/60">
                   <div className="flex items-center gap-2 text-xs text-amber-900 dark:text-amber-300 font-medium">
                     <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                    <span>{appliedReward.name}</span>
+                    <span>{t(appliedReward.nameKey)}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-mono font-bold text-amber-600 dark:text-amber-400 num" data-ltr>
@@ -355,8 +378,9 @@ function CartReviewView({
                     </span>
                     <button
                       onClick={removeReward}
-                      className="text-zinc-400 hover:text-red-500 cursor-pointer"
-                      title={lang === "ar" ? "إزالة المكافأة" : "Remove reward"}
+                      className="text-zinc-400 hover:text-red-500 cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500"
+                      aria-label={t("c.removeReward")}
+                      title={t("c.removeReward")}
                     >
                       <X className="w-3 h-3" />
                     </button>
@@ -369,10 +393,10 @@ function CartReviewView({
             <div className="pt-2">
               <div className="flex items-center justify-between mb-2">
                 <span className={`text-[11px] font-mono font-semibold text-zinc-500 ${lang === "ar" ? "normal-case tracking-normal" : "uppercase tracking-wider"}`}>
-                  {lang === "ar" ? "أضف من المخبوزات" : "Pair with Fresh Bakery"}
+                  {t("c.pairT")}
                 </span>
                 <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
-                  {lang === "ar" ? "يُخبز يومياً" : "Baked Daily"}
+                  {t("c.pairSub")}
                 </span>
               </div>
               <div className="grid grid-cols-3 gap-2">
@@ -382,7 +406,7 @@ function CartReviewView({
                     onClick={() =>
                       addItem({
                         id: snack.id,
-                        name: t(`menu.${snack.id}.n`),
+                        nameKey: `menu.${snack.id}.n`,
                         price: snack.price,
                       })
                     }
@@ -476,12 +500,6 @@ function CheckoutFormView({
 }) {
   const { t, tf, lang } = useI18n();
 
-  const storeOptions = [
-    { value: "store-1", key: "st.opt1" },
-    { value: "store-2", key: "st.opt2" },
-    { value: "store-3", key: "st.opt3" },
-  ];
-
   return (
     <form
       onSubmit={onPlaceOrder}
@@ -527,9 +545,9 @@ function CheckoutFormView({
             onChange={(e) => setPickupStore(e.target.value)}
             className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
           >
-            {storeOptions.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {t(opt.key)}
+            {stores.map((store) => (
+              <option key={store.id} value={store.id}>
+                {t(`${store.keyPrefix}.pickup`)}
               </option>
             ))}
           </select>
@@ -581,10 +599,12 @@ function CheckoutFormView({
 function OrderSuccessView({
   customerName,
   orderNumber,
+  earnedPoints,
   onClose,
 }: {
   customerName: string;
   orderNumber: string;
+  earnedPoints: number;
   onClose: () => void;
 }) {
   const { t, tf, lang } = useI18n();
@@ -604,7 +624,7 @@ function OrderSuccessView({
         {t("c.successT")}
       </h3>
       <p className="text-xs text-zinc-500 mt-1">
-        {tf("c.thanks", { name: customerName || (lang === "ar" ? "صديقنا" : "Friend") })}
+        {tf("c.thanks", { name: customerName || t("c.friend") })}
       </p>
 
       <div className="my-5 p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 w-full max-w-xs space-y-1.5 text-xs" dir={lang === "ar" ? "rtl" : "ltr"}>
@@ -620,7 +640,7 @@ function OrderSuccessView({
         </div>
         <div className="flex justify-between">
           <span className="text-zinc-400">{t("c.pts")}</span>
-          <span className="font-bold text-amber-500">{t("c.ptsVal")}</span>
+          <span className="font-bold text-amber-500 num" data-ltr>{tf("c.ptsVal", { points: earnedPoints })}</span>
         </div>
       </div>
 

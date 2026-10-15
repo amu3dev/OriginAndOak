@@ -9,6 +9,8 @@ import { useI18n } from "@/lib/i18n";
 import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
 import ProductDetailModal, { ProductDetail } from "@/components/ProductDetailModal";
 
+const FEATURED_OPTION_KEYS = ["size.medium", "milk.whole", "ex.hazelnut", "ex.caramel"];
+
 export default function Hero() {
   const { addItem, openCart } = useCart();
   const { t, tf, lang } = useI18n();
@@ -37,12 +39,9 @@ export default function Hero() {
   const handleOrderFeatured = () => {
     addItem({
       id: "featured-latte-of-the-day",
-      name: t("hero.fName"),
+      nameKey: "hero.fName",
       price: 5.5,
-      customizations:
-        lang === "ar"
-          ? "وسط (12oz) • حليب كامل • بندق وكراميل"
-          : "Medium (12oz) • Whole Milk • Hazelnut & Caramel",
+      optionKeys: FEATURED_OPTION_KEYS,
     });
     openCart();
   };
@@ -50,15 +49,9 @@ export default function Hero() {
   const handleOrderPairingBundle = () => {
     addItem({
       id: "daily-morning-pairing",
-      name:
-        lang === "ar"
-          ? "وجبة قهوة الصباح (لاتيه + كرواسون)"
-          : "Morning Ritual Pairing (Latte + Croissant)",
+      nameKey: "hero.bundleName",
       price: 7.5,
-      customizations:
-        lang === "ar"
-          ? "كراميل هازلنوت لاتيه + كرواسون بالزبدة"
-          : "Caramel Hazelnut Latte (12oz) + Butter Croissant",
+      optionKeys: ["hero.bundleOptions"],
     });
     setBundleAdded(true);
     setTimeout(() => {
@@ -70,13 +63,14 @@ export default function Hero() {
   const openFeaturedPreview = () => {
     setPreviewProduct({
       id: "featured-latte-of-the-day",
-      name: t("hero.fName"),
-      description: t("hero.fDesc"),
+      nameKey: "hero.fName",
+      descriptionKey: "hero.fDesc",
       price: 5.5,
       image: "/images/hero-latte.jpg",
       tags: ["houseBlend", "signature"],
-      origin: lang === "ar" ? "إثيوبيا وسومطرة سبيشالتي" : "Ethiopia & Sumatra Direct Blend",
-      roastLevel: lang === "ar" ? "تحميص وسطي عطري" : "Aromatic Medium Roast",
+      optionKeys: FEATURED_OPTION_KEYS,
+      originKey: "hero.fOrigin",
+      roastKey: "hero.fRoast",
     });
   };
 
@@ -196,8 +190,8 @@ export default function Hero() {
                   type="button"
                   onClick={openFeaturedPreview}
                   className="relative w-36 h-36 rounded-2xl overflow-hidden border border-zinc-700/80 shadow-lg group/img cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500"
-                  aria-label={lang === "ar" ? `عرض تفاصيل ${t("hero.fName")}` : `View details of ${t("hero.fName")}`}
-                  title={lang === "ar" ? "انقر لتكبير الصورة والتفاصيل" : "Click to view full photo & details"}
+                  aria-label={tf("p.view", { name: t("hero.fName") })}
+                  title={t("p.viewHint")}
                 >
                   <Image
                     src="/images/hero-latte.jpg"
@@ -242,7 +236,7 @@ export default function Hero() {
                       <div className="relative w-9 h-9 rounded-lg overflow-hidden shrink-0 border border-zinc-700">
                         <Image
                           src="/images/croissant.jpg"
-                          alt="Butter Croissant"
+                          alt={t("menu.pasty-1.n")}
                           fill
                           sizes="36px"
                           className="object-cover group-hover:scale-110 transition-transform"
@@ -250,17 +244,17 @@ export default function Hero() {
                       </div>
                       <div className="text-start">
                         <div className="text-xs font-semibold text-zinc-200 group-hover:text-amber-400 transition-colors">
-                          {lang === "ar" ? "أضف كرواسون بالزبدة" : "Pair with Butter Croissant"}
+                          {t("hero.bundleCta")}
                         </div>
                         <div className="text-[10px] text-zinc-400">
-                          {lang === "ar" ? "وفّر $1.50 مع وجبة الفطور" : "Save $1.50 with Breakfast Set"}
+                          {t("hero.bundleSave")}
                         </div>
                       </div>
                     </div>
                     <span className="text-xs font-mono font-bold text-amber-400 num" data-ltr>
                       {bundleAdded ? (
                         <span className="flex items-center gap-1 text-emerald-400">
-                          <Check className="w-3.5 h-3.5" /> {lang === "ar" ? "تمت الإضافة" : "Set Added"}
+                          <Check className="w-3.5 h-3.5" /> {t("hero.bundleAdded")}
                         </span>
                       ) : (
                         "$7.50"

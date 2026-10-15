@@ -29,9 +29,9 @@ export default function Footer() {
   };
 
   const socials = [
-    { Icon: AtSign, label: lang === "ar" ? "إنستغرام" : "Instagram" },
-    { Icon: Hash, label: lang === "ar" ? "تويتر" : "Twitter" },
-    { Icon: Globe, label: lang === "ar" ? "فيسبوك" : "Facebook" },
+    { Icon: AtSign, labelKey: "f.instagram" },
+    { Icon: Hash, labelKey: "f.twitter" },
+    { Icon: Globe, labelKey: "f.facebook" },
   ];
 
   return (
@@ -44,25 +44,25 @@ export default function Footer() {
               <div className="relative w-8 h-8 rounded-lg overflow-hidden border border-amber-500/40 bg-zinc-900 shrink-0">
                 <Image
                   src="/images/origin-and-oak-logo.jpg"
-                  alt="Origin & Oak Logo"
+                  alt={t("brand.logoAlt")}
                   fill
                   sizes="32px"
                   className="object-cover scale-150"
                 />
               </div>
               <span className="text-lg font-serif font-bold tracking-tight">
-                {lang === "ar" ? "أوريجن آند أوك" : "Origin & Oak"}
+                {t("brand.name")}
               </span>
             </a>
             <p className="mt-4 text-zinc-400 text-xs sm:text-sm leading-relaxed">
               {t("f.tagline")}
             </p>
             <div className="flex gap-2.5 mt-6">
-              {socials.map(({ Icon, label }) => (
+              {socials.map(({ Icon, labelKey }) => (
                 <a
-                  key={label}
+                  key={labelKey}
                   href="#"
-                  aria-label={label}
+                  aria-label={t(labelKey)}
                   className="w-9 h-9 rounded-full bg-zinc-900 hover:bg-amber-500 hover:text-zinc-950 border border-zinc-800 flex items-center justify-center transition-colors text-zinc-300"
                 >
                   <Icon className="w-3.5 h-3.5" />

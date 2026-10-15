@@ -35,7 +35,7 @@ export default function Navbar() {
             <div className="relative w-9 h-9 rounded-xl overflow-hidden shadow-xs group-hover:scale-105 transition-transform border border-amber-500/40 bg-zinc-950 shrink-0">
               <Image
                 src="/images/origin-and-oak-logo.jpg"
-                alt="Origin & Oak Emblem"
+                alt={t("brand.logoAlt")}
                 fill
                 sizes="36px"
                 className="object-cover scale-150"
@@ -43,7 +43,7 @@ export default function Navbar() {
             </div>
             <div className="flex min-w-0 flex-col">
               <span className="whitespace-nowrap text-base sm:text-lg font-serif font-bold tracking-tight leading-none">
-                {lang === "ar" ? "أوريجن آند أوك" : "Origin & Oak"}
+                {t("brand.name")}
               </span>
               <span className={`hidden sm:block text-[10px] font-mono tracking-widest text-zinc-400 dark:text-zinc-500 mt-0.5 ${lang === "ar" ? "normal-case" : "uppercase"}`}>
                 {t("nav.brandSub")}

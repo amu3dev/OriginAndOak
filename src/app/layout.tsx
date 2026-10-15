@@ -9,6 +9,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/lib/theme-context";
 import { CartProvider } from "@/lib/cart-context";
 import { LanguageProvider } from "@/lib/i18n";
+import { LANG_STORAGE_KEY, THEME_STORAGE_KEY } from "@/lib/preferences";
 import Navbar from "@/components/Navbar";
 import CartDrawer from "@/components/Cart";
 import SectionNav from "@/components/SectionNav";
@@ -35,6 +36,10 @@ const readexPro = Readex_Pro({
   weight: ["300", "400", "500", "600", "700"],
 });
 
+// Applies the saved theme and language before first paint so returning
+// dark-mode or Arabic visitors don't see a light, left-to-right flash.
+const preferencesScript = `(function(){try{var d=document.documentElement;var t=localStorage.getItem(${JSON.stringify(THEME_STORAGE_KEY)});if(t?t==="dark":matchMedia("(prefers-color-scheme: dark)").matches)d.classList.add("dark");if(localStorage.getItem(${JSON.stringify(LANG_STORAGE_KEY)})==="ar"){d.lang="ar";d.dir="rtl"}}catch(e){}})()`;
+
 export const metadata: Metadata = {
   title: "Origin & Oak — Specialty Coffee Roasters | أوريجن آند أوك",
   description:
@@ -53,6 +58,9 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${playfairSerif.variable} ${readexPro.variable} h-full antialiased`}
       suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: preferencesScript }} />
+      </head>
       <body className="min-h-full flex flex-col font-sans">
         <LanguageProvider>
           <ThemeProvider>

@@ -17,11 +17,11 @@ interface Option {
   price: number;
 }
 
-const drinkTypes: { id: DrinkType; labelKey: string; image: string; basePrice: number; defaultProfile: { intensity: number; sweetness: number; creaminess: number } }[] = [
-  { id: "latte", labelKey: "drink.latte", image: "/images/hero-latte.jpg", basePrice: 4.5, defaultProfile: { intensity: 60, sweetness: 40, creaminess: 85 } },
-  { id: "cappuccino", labelKey: "drink.cappuccino", image: "/images/cappuccino.jpg", basePrice: 4.5, defaultProfile: { intensity: 75, sweetness: 30, creaminess: 70 } },
-  { id: "americano", labelKey: "drink.americano", image: "/images/espresso.jpg", basePrice: 3.5, defaultProfile: { intensity: 85, sweetness: 10, creaminess: 10 } },
-  { id: "cold-brew", labelKey: "drink.coldBrew", image: "/images/cold-brew.jpg", basePrice: 4.0, defaultProfile: { intensity: 80, sweetness: 20, creaminess: 15 } },
+const drinkTypes: { id: DrinkType; labelKey: string; customKey: string; image: string; basePrice: number; defaultProfile: { intensity: number; sweetness: number; creaminess: number } }[] = [
+  { id: "latte", labelKey: "drink.latte", customKey: "custom.latte", image: "/images/hero-latte.jpg", basePrice: 4.5, defaultProfile: { intensity: 60, sweetness: 40, creaminess: 85 } },
+  { id: "cappuccino", labelKey: "drink.cappuccino", customKey: "custom.cappuccino", image: "/images/cappuccino.jpg", basePrice: 4.5, defaultProfile: { intensity: 75, sweetness: 30, creaminess: 70 } },
+  { id: "americano", labelKey: "drink.americano", customKey: "custom.americano", image: "/images/espresso.jpg", basePrice: 3.5, defaultProfile: { intensity: 85, sweetness: 10, creaminess: 10 } },
+  { id: "cold-brew", labelKey: "drink.coldBrew", customKey: "custom.coldBrew", image: "/images/cold-brew.jpg", basePrice: 4.0, defaultProfile: { intensity: 80, sweetness: 20, creaminess: 15 } },
 ];
 
 const sizes: Option[] = [
@@ -87,19 +87,18 @@ export default function CustomDrinkBuilder() {
   };
 
   const handleAdd = () => {
-    const sizeLabel = t(sizes.find((s) => s.id === size)?.labelKey ?? "");
-    const milkLabel = t(milks.find((m) => m.id === milk)?.labelKey ?? "");
-    const extrasLabels = extras
-      .filter((e) => selectedExtras.includes(e.id))
-      .map((e) => t(e.labelKey))
-      .join("، ");
-    const customizations = [sizeLabel, milkLabel, extrasLabels].filter(Boolean).join(" • ");
+    const optionKeys = [
+      sizes.find((s) => s.id === size)?.labelKey,
+      milks.find((m) => m.id === milk)?.labelKey,
+      // Iterate the catalog so the same extras always produce the same order.
+      ...extras.filter((e) => selectedExtras.includes(e.id)).map((e) => e.labelKey),
+    ].filter((key): key is string => Boolean(key));
 
     addItem({
-      id: `custom-${drink}-${Date.now()}`,
-      name: t(`custom.${drink}`),
+      id: `custom-${drink}`,
+      nameKey: selectedDrinkObj.customKey,
       price: total,
-      customizations,
+      optionKeys,
     });
 
     setIsAdded(true);
@@ -272,12 +271,12 @@ export default function CustomDrinkBuilder() {
             <div className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800">
               <div className={`flex items-center gap-2 text-xs font-mono font-semibold text-zinc-700 dark:text-zinc-300 mb-3 ${lang === "ar" ? "normal-case tracking-normal" : "uppercase tracking-wider"}`}>
                 <Sliders className="w-3.5 h-3.5 text-amber-500 rtl:-scale-x-100" />
-                <span>{lang === "ar" ? "تقدير حسي مباشر للنكهة" : "Live Sensory Profile Estimate"}</span>
+                <span>{t("b.profile")}</span>
               </div>
               <div className="grid sm:grid-cols-3 gap-4 text-xs">
                 <div>
                   <div className="flex justify-between text-zinc-500 mb-1">
-                    <span>{lang === "ar" ? "قوة الإسبريسو" : "Espresso Intensity"}</span>
+                    <span>{t("b.intensity")}</span>
                     <span className="font-mono text-zinc-700 dark:text-zinc-300 num" data-ltr>{currentIntensity}%</span>
                   </div>
                   <div className="h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
@@ -287,7 +286,7 @@ export default function CustomDrinkBuilder() {
 
                 <div>
                   <div className="flex justify-between text-zinc-500 mb-1">
-                    <span>{lang === "ar" ? "مستوى الحلاوة" : "Sweetness Level"}</span>
+                    <span>{t("b.sweetness")}</span>
                     <span className="font-mono text-zinc-700 dark:text-zinc-300 num" data-ltr>{currentSweetness}%</span>
                   </div>
                   <div className="h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
@@ -297,7 +296,7 @@ export default function CustomDrinkBuilder() {
 
                 <div>
                   <div className="flex justify-between text-zinc-500 mb-1">
-                    <span>{lang === "ar" ? "نعومة الرغوة" : "Microfoam Creaminess"}</span>
+                    <span>{t("b.creaminess")}</span>
                     <span className="font-mono text-zinc-700 dark:text-zinc-300 num" data-ltr>{currentCreaminess}%</span>
                   </div>
                   <div className="h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">

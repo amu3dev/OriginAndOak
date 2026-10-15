@@ -5,42 +5,7 @@ import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import { MapPin, Clock, Phone, Navigation } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
-
-interface Store {
-  id: string;
-  neighborhoodKey: string;
-  address: string;
-  phone: string;
-  pinCoordinates: { x: number; y: number };
-  features: string[];
-}
-
-const stores: Store[] = [
-  {
-    id: "1",
-    neighborhoodKey: "st.1.hood",
-    address: "123 Main Street, Suite 100",
-    phone: "(555) 123-4567",
-    pinCoordinates: { x: 32, y: 45 },
-    features: ["driveThru", "patio", "wifi", "roasteryBar"],
-  },
-  {
-    id: "2",
-    neighborhoodKey: "st.2.hood",
-    address: "456 River Road",
-    phone: "(555) 234-5678",
-    pinCoordinates: { x: 68, y: 35 },
-    features: ["riverView", "petFriendly", "wifi", "bakery"],
-  },
-  {
-    id: "3",
-    neighborhoodKey: "st.3.hood",
-    address: "789 College Ave",
-    phone: "(555) 345-6789",
-    pinCoordinates: { x: 50, y: 70 },
-    features: ["studyRooms", "lateNight", "wifi"],
-  },
-];
+import { stores, DEFAULT_STORE_ID } from "@/lib/stores";
 
 const gridRoads = [
   { top: "25%", left: "10%", width: "80%", height: "1px", rotate: "-5deg" },
@@ -51,7 +16,7 @@ const gridRoads = [
 ];
 
 export default function StoreLocator() {
-  const [selectedStore, setSelectedStore] = useState<string>("store-1");
+  const [selectedStore, setSelectedStore] = useState<string>(DEFAULT_STORE_ID);
   const { t, lang } = useI18n();
   const shouldReduceMotion = usePrefersReducedMotion();
 
@@ -60,7 +25,7 @@ export default function StoreLocator() {
   const orbY = useSpring(useTransform(scrollYProgress, [0, 1], [50, -70]), { stiffness: 100, damping: 30 });
   const orbScale = useTransform(scrollYProgress, [0, 0.5, 1], [0.85, 1.15, 0.9]);
 
-  const activeStore = stores.find((s) => `store-${s.id}` === selectedStore) ?? stores[0];
+  const activeStore = stores.find((s) => s.id === selectedStore) ?? stores[0];
 
   return (
     <section ref={sectionRef} id="locations" className="relative py-24 bg-white dark:bg-zinc-950 border-t border-zinc-200/80 dark:border-zinc-800 transition-colors overflow-hidden">
@@ -115,17 +80,17 @@ export default function StoreLocator() {
 
           {/* Map Pins */}
           {stores.map((store) => {
-            const isSelected = selectedStore === `store-${store.id}`;
+            const isSelected = selectedStore === store.id;
             return (
               <button
                 key={store.id}
-                onClick={() => setSelectedStore(`store-${store.id}`)}
+                onClick={() => setSelectedStore(store.id)}
                 style={{
                   left: `${store.pinCoordinates.x}%`,
                   top: `${store.pinCoordinates.y}%`,
                 }}
                 className={`absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group cursor-pointer z-20 focus-visible:ring-2 focus-visible:ring-amber-500 rounded-full`}
-                aria-label={t(`st.${store.id}.name`)}
+                aria-label={t(`${store.keyPrefix}.name`)}
               >
                 <div
                   className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 ${
@@ -143,7 +108,7 @@ export default function StoreLocator() {
                       : "bg-white/90 text-zinc-700 dark:bg-zinc-900/90 dark:text-zinc-300"
                   }`}
                 >
-                  {t(store.neighborhoodKey)}
+                  {t(`${store.keyPrefix}.hood`)}
                 </span>
               </button>
             );
@@ -161,10 +126,10 @@ export default function StoreLocator() {
               </span>
             </div>
             <h4 className="font-serif font-bold text-zinc-900 dark:text-white text-xs sm:text-sm mt-1">
-              {t(`st.${activeStore.id}.name`)}
+              {t(`${activeStore.keyPrefix}.name`)}
             </h4>
             <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5 truncate">
-              {t(`st.${activeStore.id}.address`)}
+              {t(`${activeStore.keyPrefix}.address`)}
             </p>
           </div>
         </motion.div>
@@ -172,7 +137,7 @@ export default function StoreLocator() {
         {/* Store Grid Cards */}
         <div className="grid md:grid-cols-3 gap-5">
           {stores.map((store, i) => {
-            const isSelected = selectedStore === `store-${store.id}`;
+            const isSelected = selectedStore === store.id;
             return (
               <motion.div
                 key={store.id}
@@ -180,17 +145,17 @@ export default function StoreLocator() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.08 }}
-                onClick={() => setSelectedStore(`store-${store.id}`)}
+                onClick={() => setSelectedStore(store.id)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
-                    setSelectedStore(`store-${store.id}`);
+                    setSelectedStore(store.id);
                   }
                 }}
                 role="button"
                 tabIndex={0}
                 aria-pressed={isSelected}
-                aria-label={t(`st.${store.id}.name`)}
+                aria-label={t(`${store.keyPrefix}.name`)}
                 className={`cursor-pointer rounded-2xl p-5 sm:p-6 transition-all duration-200 border focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 ${
                   isSelected
                     ? "bg-white dark:bg-zinc-900 border-amber-500 shadow-md ring-1 ring-amber-500/30"
@@ -199,7 +164,7 @@ export default function StoreLocator() {
               >
                 <div className="flex items-center justify-between mb-2.5 gap-2">
                   <span className={`text-[10px] font-mono font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider ${lang === "ar" ? "normal-case tracking-normal" : ""}`}>
-                    {t(store.neighborhoodKey)}
+                    {t(`${store.keyPrefix}.hood`)}
                   </span>
                   {isSelected ? (
                     <span className={`text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 font-semibold shrink-0 ${lang === "ar" ? "normal-case tracking-normal" : ""}`}>
@@ -209,27 +174,27 @@ export default function StoreLocator() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        setSelectedStore(`store-${store.id}`);
+                        setSelectedStore(store.id);
                       }}
                       className={`text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 hover:bg-amber-500 hover:text-zinc-950 transition-colors font-medium cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-500 shrink-0 ${lang === "ar" ? "normal-case tracking-normal" : ""}`}
                     >
-                      {t("menu.add")}
+                      {t("s.select")}
                     </button>
                   )}
                 </div>
 
                 <h3 className="text-base font-serif font-bold text-zinc-900 dark:text-zinc-100 mb-3">
-                  {t(`st.${store.id}.name`)}
+                  {t(`${store.keyPrefix}.name`)}
                 </h3>
 
                 <div className="space-y-2 text-xs text-zinc-600 dark:text-zinc-300">
                   <div className="flex items-start gap-2">
                     <MapPin className="w-3.5 h-3.5 text-zinc-400 shrink-0 mt-0.5 rtl:-scale-x-100" />
-                    <span>{t(`st.${store.id}.address`)}</span>
+                    <span>{t(`${store.keyPrefix}.address`)}</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <Clock className="w-3.5 h-3.5 text-zinc-400 shrink-0 mt-0.5 rtl:-scale-x-100" />
-                    <span>{t(`st.${store.id}.hours`)}</span>
+                    <span>{t(`${store.keyPrefix}.hours`)}</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <Phone className="w-3.5 h-3.5 text-zinc-400 shrink-0 mt-0.5 rtl:-scale-x-100" />
@@ -251,7 +216,7 @@ export default function StoreLocator() {
 
                 <a
                   href={`https://maps.google.com/?q=${encodeURIComponent(
-                    `${t(`st.${store.id}.name`)} ${t(`st.${store.id}.address`)}`
+                    `${t(`${store.keyPrefix}.name`)} ${t(`${store.keyPrefix}.address`)}`
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"
