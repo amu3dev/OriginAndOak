@@ -17,8 +17,6 @@ interface MenuItem {
   image: string;
   category: Category;
   tags?: string[];
-  origin?: string;
-  roastLevel?: string;
 }
 
 const categories: { key: Category; labelKey: string; emoji: string }[] = [
@@ -159,7 +157,7 @@ export default function MenuSection() {
   const [addedItems, setAddedItems] = useState<Record<string, boolean>>({});
   const [previewProduct, setPreviewProduct] = useState<ProductDetail | null>(null);
   const { addItem } = useCart();
-  const { t, lang } = useI18n();
+  const { t, tf, lang } = useI18n();
   const shouldReduceMotion = usePrefersReducedMotion();
 
   const sectionRef = useRef<HTMLElement>(null);
@@ -172,7 +170,7 @@ export default function MenuSection() {
   const handleAdd = (item: MenuItem) => {
     addItem({
       id: item.id,
-      name: t(`menu.${item.id}.n`),
+      nameKey: `menu.${item.id}.n`,
       price: item.price,
     });
     setAddedItems((prev) => ({ ...prev, [item.id]: true }));
@@ -184,13 +182,11 @@ export default function MenuSection() {
   const openProductPreview = (item: MenuItem) => {
     setPreviewProduct({
       id: item.id,
-      name: t(`menu.${item.id}.n`),
-      description: t(`menu.${item.id}.d`),
+      nameKey: `menu.${item.id}.n`,
+      descriptionKey: `menu.${item.id}.d`,
       price: item.price,
       image: item.image,
       tags: item.tags,
-      origin: item.origin,
-      roastLevel: item.roastLevel,
     });
   };
 
@@ -266,8 +262,8 @@ export default function MenuSection() {
                         type="button"
                         onClick={() => openProductPreview(item)}
                         className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-zinc-200/80 dark:border-zinc-700/80 group/img cursor-pointer shadow-xs focus-visible:ring-2 focus-visible:ring-amber-500"
-                        aria-label={lang === "ar" ? `عرض تفاصيل ${t(`menu.${item.id}.n`)}` : `View details of ${t(`menu.${item.id}.n`)}`}
-                        title={lang === "ar" ? "انقر لتكبير الصورة والتفاصيل" : "Click to view full photo & details"}
+                        aria-label={tf("p.view", { name: t(`menu.${item.id}.n`) })}
+                        title={t("p.viewHint")}
                       >
                         <Image
                           src={item.image}

@@ -4,21 +4,25 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
+  useLayoutEffect,
   useMemo,
   useSyncExternalStore,
   type ReactNode,
 } from "react";
+import { LANG_STORAGE_KEY } from "@/lib/preferences";
 
 export type Lang = "en" | "ar";
 
-const LANG_STORAGE_KEY = "origin_and_oak_lang";
 
 /* ------------------------------------------------------------------ */
 /* English dictionary                                                  */
 /* ------------------------------------------------------------------ */
 
 const en: Record<string, string> = {
+  // Brand
+  "brand.name": "Origin & Oak",
+  "brand.logoAlt": "Origin & Oak logo",
+
   // Navbar
   "nav.menu": "Menu",
   "nav.lab": "Barista Lab",
@@ -49,6 +53,13 @@ const en: Record<string, string> = {
   "hero.fDesc":
     "Ristretto double shot over toasted hazelnut reduction, creamy steamed oat milk, and house-churned sea salt caramel drizzle.",
   "hero.fAdd": "Add to Order ({price})",
+  "hero.fOrigin": "Ethiopia & Sumatra Direct Blend",
+  "hero.fRoast": "Aromatic Medium Roast",
+  "hero.bundleName": "Morning Ritual Pairing (Latte + Croissant)",
+  "hero.bundleOptions": "Caramel Hazelnut Latte (12oz) + Butter Croissant",
+  "hero.bundleCta": "Pair with Butter Croissant",
+  "hero.bundleSave": "Save $1.50 with Breakfast Set",
+  "hero.bundleAdded": "Set Added",
 
   // Menu section
   "menu.kicker": "Curated Menu",
@@ -133,6 +144,10 @@ const en: Record<string, string> = {
   "ex.cinnamon": "Ceylon Cinnamon",
   "ex.whipped": "Whipped Cream",
   "ex.extraShot": "Extra Ristretto Shot",
+  "b.profile": "Live Sensory Profile Estimate",
+  "b.intensity": "Espresso Intensity",
+  "b.sweetness": "Sweetness Level",
+  "b.creaminess": "Microfoam Creaminess",
   "b.total": "Calculated Total",
   "b.add": "Add Custom Drink",
   "b.added": "Added to Order!",
@@ -160,13 +175,20 @@ const en: Record<string, string> = {
   "c.proceed": "Proceed to Checkout",
   "c.clear": "Clear order",
   "c.close": "Close cart drawer",
+  "c.freeProgress": "Add {amount} for a free espresso shot!",
+  "c.freeUnlocked": "You unlocked a free espresso shot!",
+  "c.freeShot": "Complimentary Espresso Shot",
+  "c.freeTag": "Free",
+  "c.removeReward": "Remove reward",
+  "c.pairT": "Pair with Fresh Bakery",
+  "c.pairSub": "Baked Daily",
   "c.nameL": "Customer Name",
   "c.nameP": "e.g. Alex Smith",
   "c.nameRequired": "Please enter your name.",
   "c.storeL": "Pickup Roastery",
-  "st.opt1": "Downtown Flagship — 123 Main St",
-  "st.opt2": "Riverside Roastery — 456 River Rd",
-  "st.opt3": "University Commons — 789 College Ave",
+  "st.1.pickup": "Downtown Flagship — 123 Main St",
+  "st.2.pickup": "Riverside Roastery — 456 River Rd",
+  "st.3.pickup": "University Commons — 789 College Ave",
   "c.readyInfo": "Ready in approx. 8–12 minutes",
   "c.pickupInfo": "Express Counter pickup ready",
   "c.amountDue": "Total Amount",
@@ -174,15 +196,24 @@ const en: Record<string, string> = {
   "c.back": "Back to cart review",
   "c.successT": "Order In The Works!",
   "c.thanks": "Thank you, {name}!",
+  "c.friend": "Friend",
   "c.ref": "Order Ref:",
   "c.ready": "Est. Ready:",
   "c.readyVal": "10 mins",
   "c.pts": "Club Points:",
-  "c.ptsVal": "+25 pts",
+  "c.ptsVal": "+{points} pts",
   "c.done": "Done",
 
   // Product detail modal
   "p.close": "Close product view",
+  "p.kicker": "Artisan Roaster Selection",
+  "p.origin": "Origin:",
+  "p.originDefault": "Single-Origin Direct Trade",
+  "p.roast": "Roast Level:",
+  "p.roastDefault": "Medium-Light Artisan Roast",
+  "p.qty": "Quantity",
+  "p.view": "View details of {name}",
+  "p.viewHint": "Click to view full photo & details",
   "p.dec": "Decrease quantity",
   "p.inc": "Increase quantity",
 
@@ -239,6 +270,7 @@ const en: Record<string, string> = {
   "s.selectedRoastery": "Selected Roastery",
   "s.open": "Open",
   "s.selectedTag": "Selected",
+  "s.select": "Select",
   "s.directions": "Get Google Maps Route",
 
   // Footer
@@ -262,6 +294,9 @@ const en: Record<string, string> = {
   "f.legal": "© 2026 Origin & Oak Coffee Roasters. All rights reserved.",
   "f.roasted": "Roasted with care",
   "f.location": "in Portland & Austin",
+  "f.instagram": "Instagram",
+  "f.twitter": "Twitter",
+  "f.facebook": "Facebook",
 };
 
 /* ------------------------------------------------------------------ */
@@ -269,6 +304,10 @@ const en: Record<string, string> = {
 /* ------------------------------------------------------------------ */
 
 const ar: Record<string, string> = {
+  // Brand
+  "brand.name": "أوريجن آند أوك",
+  "brand.logoAlt": "شعار أوريجن آند أوك",
+
   // Navbar
   "nav.menu": "القائمة",
   "nav.lab": "مختبر الباريستا",
@@ -296,6 +335,13 @@ const ar: Record<string, string> = {
   "hero.fDesc":
     "جرعة ريستريتو مزدوجة مع خلاصة البندق المحمّص، وحليب الشوفان الكريمي، ورشة كراميل ملح البحر المصنوع في المحل.",
   "hero.fAdd": "أضف إلى الطلب ({price})",
+  "hero.fOrigin": "إثيوبيا وسومطرة سبيشالتي",
+  "hero.fRoast": "تحميص وسطي عطري",
+  "hero.bundleName": "وجبة قهوة الصباح (لاتيه + كرواسون)",
+  "hero.bundleOptions": "لاتيه الكراميل والبندق (12oz) + كرواسون بالزبدة",
+  "hero.bundleCta": "أضف كرواسون بالزبدة",
+  "hero.bundleSave": "وفّر $1.50 مع وجبة الفطور",
+  "hero.bundleAdded": "تمت الإضافة",
 
   // Menu section
   "menu.kicker": "قائمة مختارة",
@@ -318,7 +364,7 @@ const ar: Record<string, string> = {
   "menu.espresso-6.n": "أمريكانو",
   "menu.espresso-6.d": "إسبريسو يُستخلص فوق ماء ساخن للصفاء والعطر",
   "menu.cold-1.n": "كولد برو ٢٤ ساعة",
-  "menu.cold-1.d": "منقوع ببطء في مياه مبررة مصفاة بلا أي حموضة حادة",
+  "menu.cold-1.d": "منقوع ببطء في مياه مبردة مصفاة بلا أي حموضة حادة",
   "menu.cold-2.n": "لاتيه مثلج بالكراميل وملح البحر",
   "menu.cold-2.d": "إسبريسو، حليب عضوي، وكراميل المحل فوق ثلج صافٍ",
   "menu.cold-3.n": "كولد برو تنقيط كيوتو",
@@ -379,6 +425,10 @@ const ar: Record<string, string> = {
   "ex.cinnamon": "قرفة سيلان",
   "ex.whipped": "كريمة مخفوقة",
   "ex.extraShot": "جرعة ريستريتو إضافية",
+  "b.profile": "تقدير حسي مباشر للنكهة",
+  "b.intensity": "قوة الإسبريسو",
+  "b.sweetness": "مستوى الحلاوة",
+  "b.creaminess": "نعومة الرغوة",
   "b.total": "الإجمالي",
   "b.add": "أضف المشروب",
   "b.added": "أُضيف إلى الطلب!",
@@ -406,13 +456,20 @@ const ar: Record<string, string> = {
   "c.proceed": "المتابعة للدفع",
   "c.clear": "إفراغ الطلب",
   "c.close": "إغلاق السلة",
+  "c.freeProgress": "أضف {amount} لتحصل على جرعة إسبريسو مجانية!",
+  "c.freeUnlocked": "حصلت على جرعة إسبريسو مجانية!",
+  "c.freeShot": "جرعة إسبريسو مجانية",
+  "c.freeTag": "مجاناً",
+  "c.removeReward": "إزالة المكافأة",
+  "c.pairT": "أضف من المخبوزات",
+  "c.pairSub": "يُخبز يومياً",
   "c.nameL": "اسم العميل",
   "c.nameP": "مثال: أحمد محمد",
   "c.nameRequired": "يرجى إدخال اسمك.",
-  "c.storeL": "فرض الاستلام",
-  "st.opt1": "الفرع الرئيسي وسط المدينة — شارع الرئيسي 123",
-  "st.opt2": "محمصة الريف — طريق النهر 456",
-  "st.opt3": "المجمع الجامعي — شارع الكلية 789",
+  "c.storeL": "فرع الاستلام",
+  "st.1.pickup": "الفرع الرئيسي وسط المدينة — شارع الرئيسي 123",
+  "st.2.pickup": "محمصة الواجهة المائية — طريق النهر 456",
+  "st.3.pickup": "مجمع الجامعة — شارع الكلية 789",
   "c.readyInfo": "جاهز خلال ٨–١٢ دقيقة تقريباً",
   "c.pickupInfo": "جاهز عند كاونتر الاستلام السريع",
   "c.amountDue": "المبلغ الإجمالي",
@@ -420,15 +477,24 @@ const ar: Record<string, string> = {
   "c.back": "العودة لمراجعة السلة",
   "c.successT": "طلبك قيد التحضير!",
   "c.thanks": "شكراً لك، {name}!",
+  "c.friend": "صديقنا",
   "c.ref": "رقم الطلب:",
   "c.ready": "الجاهزية المتوقعة:",
   "c.readyVal": "١٠ دقائق",
   "c.pts": "نقاط النادي:",
-  "c.ptsVal": "+٢٥ نقطة",
+  "c.ptsVal": "+{points} نقطة",
   "c.done": "تم",
 
   // Product detail modal
   "p.close": "إغلاق تفاصيل المنتج",
+  "p.kicker": "تفاصيل المحصول والحرفة",
+  "p.origin": "المصدر:",
+  "p.originDefault": "مزارع مباشرة مختارة",
+  "p.roast": "درجة التحميص:",
+  "p.roastDefault": "تحميص متوسط مخصص",
+  "p.qty": "الكمية",
+  "p.view": "عرض تفاصيل {name}",
+  "p.viewHint": "انقر لتكبير الصورة والتفاصيل",
   "p.dec": "إنقاص الكمية",
   "p.inc": "زيادة الكمية",
 
@@ -484,6 +550,7 @@ const ar: Record<string, string> = {
   "s.selectedRoastery": "المحمصة المحددة",
   "s.open": "مفتوح",
   "s.selectedTag": "محدد",
+  "s.select": "اختيار",
   "s.directions": "احصل على المسار عبر خرائط جوجل",
 
   // Footer
@@ -507,6 +574,9 @@ const ar: Record<string, string> = {
   "f.legal": "© 2026 محمصة أوريجن آند أوك. جميع الحقوق محفوظة.",
   "f.roasted": "محمّصة بعناية",
   "f.location": "في بورتلاند وأوستن",
+  "f.instagram": "إنستغرام",
+  "f.twitter": "تويتر",
+  "f.facebook": "فيسبوك",
 };
 
 const dict: Record<Lang, Record<string, string>> = { en, ar };
@@ -549,7 +619,9 @@ const I18nContext = createContext<I18nContextType | undefined>(undefined);
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const lang = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
-  useEffect(() => {
+  // The inline script in the root layout sets these before first paint; this
+  // keeps them in sync afterwards (and re-applies them after the dev remount).
+  useLayoutEffect(() => {
     document.documentElement.lang = lang;
     document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
   }, [lang]);

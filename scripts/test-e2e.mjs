@@ -1,8 +1,16 @@
 import { chromium } from "playwright-core";
 
-const CHROME_PATH = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
-const BASE_URL = "http://localhost:3000";
-const CART_STORAGE_KEY = "brew_and_bean_cart_v1";
+// Expects the app to already be running (`npm run dev` or `npm run build && npm start`).
+// Override with CHROME_PATH=/path/to/chrome and BASE_URL=http://host:port.
+const DEFAULT_CHROME_PATHS = {
+  darwin: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+  linux: "/usr/bin/google-chrome",
+  win32: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+};
+const CHROME_PATH = process.env.CHROME_PATH ?? DEFAULT_CHROME_PATHS[process.platform];
+const BASE_URL = process.env.BASE_URL ?? "http://localhost:3000";
+// Seeding the pre-v2 key also exercises the cart migration.
+const LEGACY_CART_STORAGE_KEY = "brew_and_bean_cart_v1";
 
 const EXPECTED_STEPS = [
   "1. Navigate to http://localhost:3000",
@@ -26,7 +34,9 @@ const EXPECTED_STEPS = [
   "16. Store Card Keyboard Selection",
   "17. Product Dialog Focus Management",
   "18. Localized Product Dialog Labels",
-  "19. Runtime Console & Page Errors",
+  "19. Cart Line Identity Across Languages",
+  "20. Reward Points Refund & Persistence",
+  "21. Runtime Console & Page Errors",
 ];
 
 const results = [];
@@ -94,7 +104,7 @@ async function runPersistedCartHydrationCheck(browser) {
   await context.addInitScript(({ key, value }) => {
     localStorage.setItem(key, JSON.stringify(value));
   }, {
-    key: CART_STORAGE_KEY,
+    key: LEGACY_CART_STORAGE_KEY,
     value: [{ id: "seed-item", name: "Seed Coffee", price: 4, quantity: 1 }],
   });
 
@@ -118,6 +128,78 @@ async function runPersistedCartHydrationCheck(browser) {
     throw new Error(`hydration error: ${hydrationErrors[0].split("\n")[0]}`);
   }
   return "seeded cart restored with no hydration error";
+}
+
+async function runCartLineIdentityCheck(browser) {
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  const cartDrawer = page.locator('div[role="dialog"][aria-labelledby="cart-drawer-heading"]');
+
+  try {
+    await page.goto(BASE_URL, { waitUntil: "networkidle" });
+    await page.locator("section").first().getByRole("button", { name: /^Add to Order/ }).click();
+    await page.waitForTimeout(500);
+    await page.getByRole("button", { name: "Close cart drawer" }).click();
+    await page.waitForTimeout(500);
+
+    await page.getByRole("button", { name: "View details of Caramel Hazelnut Latte" }).click();
+    const productDialog = page.locator('div[role="dialog"][aria-labelledby="product-detail-title"]');
+    await productDialog.getByRole("button", { name: /^Add to Order/ }).click();
+    await page.waitForTimeout(1200);
+    await requireVisible(cartDrawer, "cart dialog after adding from product view");
+
+    const lines = cartDrawer.locator("h3").filter({ hasText: "Caramel Hazelnut Latte" });
+    if ((await lines.count()) !== 1) {
+      throw new Error(`expected 1 featured latte line, found ${await lines.count()}`);
+    }
+    if ((await getCartCount(page)) !== 2) throw new Error("expected both adds to share one line with quantity 2");
+
+    await page.getByRole("button", { name: "Close cart drawer" }).click();
+    await page.waitForTimeout(500);
+    await page.getByRole("button", { name: "التبديل إلى العربية" }).click();
+    await page.waitForTimeout(250);
+    await page.locator('nav button[aria-label*="فتح سلة التسوق"]').click();
+    await page.waitForTimeout(500);
+    await requireVisible(cartDrawer.locator("h3").filter({ hasText: "لاتيه الكراميل والبندق" }), "translated cart line");
+
+    await cartDrawer.getByRole("button", { name: "إزالة المنتج" }).click();
+    await page.waitForTimeout(400);
+    if ((await getCartCount(page)) !== 0) throw new Error("removing the line did not empty the cart");
+    return "quick-add and product view share one line, which re-translates and removes cleanly";
+  } finally {
+    await context.close();
+  }
+}
+
+async function runRewardPointsCheck(browser) {
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  const pointsLabel = page.locator("#rewards .text-4xl");
+  const cartDrawer = page.locator('div[role="dialog"][aria-labelledby="cart-drawer-heading"]');
+
+  try {
+    await page.goto(BASE_URL, { waitUntil: "networkidle" });
+    await page.locator("#menu button").filter({ hasText: /^Add$/ }).first().click();
+    const before = Number(await pointsLabel.innerText());
+    await page.locator("#rewards button").filter({ hasText: /^Redeem$/ }).first().click();
+    await page.waitForTimeout(800);
+    const afterRedeem = Number(await pointsLabel.innerText());
+    if (afterRedeem !== before - 50) throw new Error(`expected ${before - 50} pts after redeeming, saw ${afterRedeem}`);
+
+    await page.reload({ waitUntil: "networkidle" });
+    const afterReload = Number(await pointsLabel.innerText());
+    if (afterReload !== afterRedeem) throw new Error(`points reset on reload (${afterRedeem} → ${afterReload})`);
+
+    await page.locator('nav button[aria-label*="Open shopping cart"]').click();
+    await page.waitForTimeout(500);
+    await cartDrawer.getByRole("button", { name: "Remove reward" }).click();
+    await page.waitForTimeout(250);
+    const afterRemove = Number(await pointsLabel.innerText());
+    if (afterRemove !== before) throw new Error(`expected refund to ${before} pts, saw ${afterRemove}`);
+    return `${before} → ${afterRedeem} pts, kept across reload, refunded to ${afterRemove}`;
+  } finally {
+    await context.close();
+  }
 }
 
 async function runAccessibilityChecks(browser) {
@@ -343,7 +425,7 @@ async function runE2ETests() {
     await runStep(EXPECTED_STEPS[13], async () => {
       const confirmation = page.getByText("Order In The Works!", { exact: true });
       await requireVisible(confirmation, "order confirmation");
-      const reference = page.locator("span").filter({ hasText: /^BB-\d{6}$/ }).first();
+      const reference = page.locator("span").filter({ hasText: /^OO-\d{6}$/ }).first();
       await requireVisible(reference, "generated order reference");
       return `confirmation shown with ${await reference.innerText()}`;
     });
@@ -369,7 +451,10 @@ async function runE2ETests() {
 
     await runAccessibilityChecks(browser);
 
-    await runStep(EXPECTED_STEPS[21], async () => {
+    await runStep(EXPECTED_STEPS[21], () => runCartLineIdentityCheck(browser));
+    await runStep(EXPECTED_STEPS[22], () => runRewardPointsCheck(browser));
+
+    await runStep(EXPECTED_STEPS[23], async () => {
       if (runtimeErrors.length > 0) {
         throw new Error(`runtime console/page errors: ${runtimeErrors.join(" || ")}`);
       }

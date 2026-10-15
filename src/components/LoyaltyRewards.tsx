@@ -1,12 +1,13 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import Image from "next/image";
 import { Gift, Crown, Check, Sparkles } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
 import { useI18n } from "@/lib/i18n";
 import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
+import { rewards, type Reward } from "@/lib/rewards";
 
 const tiers = [
   { key: "bean", min: 0, emoji: "☕" },
@@ -15,18 +16,10 @@ const tiers = [
   { key: "legend", min: 500, emoji: "👑" },
 ];
 
-const rewards = [
-  { id: "reward-1", nameKey: "rw.1.n", points: 50, discountValue: 1.0, image: "/images/espresso.jpg" },
-  { id: "reward-2", nameKey: "rw.2.n", points: 100, discountValue: 3.5, image: "/images/croissant.jpg" },
-  { id: "reward-3", nameKey: "rw.3.n", points: 200, discountValue: 6.5, image: "/images/lavender-latte.jpg" },
-  { id: "reward-4", nameKey: "rw.4.n", points: 150, discountValue: 5.0, emoji: "🏷️" },
-  { id: "reward-5", nameKey: "rw.5.n", points: 400, discountValue: 12.0, emoji: "🎒" },
-];
-
 export default function LoyaltyRewards() {
-  const [points, setPoints] = useState(180);
-  const [claimedRewardId, setClaimedRewardId] = useState<string | null>(null);
-  const { applyReward, openCart } = useCart();
+  const { points, appliedReward, applyReward, removeReward, openCart } = useCart();
+  // Points tied up in the applied reward come back if it is swapped out.
+  const spendablePoints = points + (appliedReward?.points ?? 0);
   const { t, tf, lang } = useI18n();
   const shouldReduceMotion = usePrefersReducedMotion();
 
@@ -43,17 +36,12 @@ export default function LoyaltyRewards() {
     ? ((points - currentTier.min) / (nextTier.min - currentTier.min)) * 100
     : 100;
 
-  const handleRedeem = (reward: (typeof rewards)[0]) => {
-    if (points < reward.points) return;
-
-    applyReward({
-      id: reward.id,
-      name: t(reward.nameKey),
-      discount: reward.discountValue,
-    });
-
-    setPoints((prev) => prev - reward.points);
-    setClaimedRewardId(reward.id);
+  const handleRedeem = (reward: Reward) => {
+    if (appliedReward?.id === reward.id) {
+      removeReward();
+      return;
+    }
+    if (!applyReward(reward)) return;
 
     setTimeout(() => {
       openCart();
@@ -111,7 +99,7 @@ export default function LoyaltyRewards() {
                 </span>
               </div>
               <span className="text-[11px] font-mono text-zinc-400 border border-zinc-800 px-3 py-1 rounded-full bg-zinc-950/60 num" data-ltr>
-                ID: #BB-8892-GOLD
+                ID: #OO-8892-GOLD
               </span>
             </div>
 
@@ -188,8 +176,8 @@ export default function LoyaltyRewards() {
 
           <div className="space-y-2.5">
             {rewards.map((reward) => {
-              const canRedeem = points >= reward.points;
-              const isClaimed = claimedRewardId === reward.id;
+              const isClaimed = appliedReward?.id === reward.id;
+              const canRedeem = isClaimed || spendablePoints >= reward.points;
 
               return (
                 <div
@@ -230,6 +218,7 @@ export default function LoyaltyRewards() {
                   {canRedeem ? (
                     <button
                       onClick={() => handleRedeem(reward)}
+                      aria-pressed={isClaimed}
                       className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer shrink-0 ${
                         isClaimed
                           ? "bg-emerald-600 text-white"
@@ -250,7 +239,7 @@ export default function LoyaltyRewards() {
                     </button>
                   ) : (
                     <span className="text-[11px] font-mono text-zinc-400 px-2 py-1 whitespace-nowrap num" data-ltr>
-                      {tf("r.needs", { points: reward.points - points })}
+                      {tf("r.needs", { points: reward.points - spendablePoints })}
                     </span>
                   )}
                 </div>

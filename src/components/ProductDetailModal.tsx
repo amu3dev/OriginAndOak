@@ -1,23 +1,24 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useRef, useState } from "react";
+import { motion, AnimatePresence, useIsPresent } from "framer-motion";
 import Image from "next/image";
 import { X, Plus, Minus, ShoppingBag, Sparkles, Check, Flame, Compass } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
 import { useI18n } from "@/lib/i18n";
+import { useDialogFocus } from "@/lib/use-dialog-focus";
 
 export interface ProductDetail {
   id: string;
-  name: string;
-  description: string;
+  nameKey: string;
+  descriptionKey: string;
   price: number;
   image: string;
-  category?: string;
   tags?: string[];
-  tastingNotes?: string[];
-  origin?: string;
-  roastLevel?: string;
+  /** Options added to the cart with the product, so it matches its quick-add line. */
+  optionKeys?: string[];
+  originKey?: string;
+  roastKey?: string;
 }
 
 interface ProductDetailModalProps {
@@ -27,79 +28,26 @@ interface ProductDetailModalProps {
 
 function ProductDetailDialog({ product, onClose }: { product: ProductDetail; onClose: () => void }) {
   const { addItem, openCart } = useCart();
-  const { t, lang } = useI18n();
+  const { t, tf } = useI18n();
   const [quantity, setQuantity] = useState(1);
   const [isAdded, setIsAdded] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
-  const returnFocusRef = useRef<HTMLElement | null>(null);
+  const isPresent = useIsPresent();
+  const name = t(product.nameKey);
 
-  // Keyboard Escape listener and focus management
-  useEffect(() => {
-    const previouslyFocused = document.activeElement instanceof HTMLElement
-      ? document.activeElement
-      : null;
-    returnFocusRef.current = previouslyFocused;
-    closeButtonRef.current?.focus();
-
-    const focusableSelector = [
-      "a[href]",
-      "button:not([disabled])",
-      "input:not([disabled])",
-      "select:not([disabled])",
-      "textarea:not([disabled])",
-      "[tabindex]:not([tabindex=\"-1\"])",
-    ].join(", ");
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        onClose();
-        return;
-      }
-
-      if (e.key !== "Tab") return;
-
-      const dialog = dialogRef.current;
-      if (!dialog) return;
-
-      const focusable = Array.from(
-        dialog.querySelectorAll<HTMLElement>(focusableSelector)
-      ).filter((element) => element.offsetParent !== null);
-
-      if (focusable.length === 0) {
-        e.preventDefault();
-        dialog.focus();
-        return;
-      }
-
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first.focus();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      if (returnFocusRef.current && document.contains(returnFocusRef.current)) {
-        returnFocusRef.current.focus();
-      }
-    };
-  }, [onClose]);
+  useDialogFocus(dialogRef, { active: isPresent, onClose, initialFocusRef: closeButtonRef });
 
   const handleAddToCart = () => {
-    for (let i = 0; i < quantity; i++) {
-      addItem({
+    addItem(
+      {
         id: product.id,
-        name: product.name,
+        nameKey: product.nameKey,
+        optionKeys: product.optionKeys,
         price: product.price,
-      });
-    }
+      },
+      quantity
+    );
     setIsAdded(true);
     setTimeout(() => {
       setIsAdded(false);
@@ -150,7 +98,7 @@ function ProductDetailDialog({ product, onClose }: { product: ProductDetail; onC
           <div className="relative h-64 sm:h-auto min-h-[280px] bg-zinc-950 overflow-hidden group">
             <Image
               src={product.image}
-              alt={product.name}
+              alt={name}
               fill
               sizes="(max-width: 640px) 100vw, 360px"
               className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
@@ -178,14 +126,14 @@ function ProductDetailDialog({ product, onClose }: { product: ProductDetail; onC
             <div>
               <div className="flex items-center gap-1.5 text-xs font-mono font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-widest mb-1.5">
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>{lang === "ar" ? "تفاصيل المحصول والحرفة" : "Artisan Roaster Selection"}</span>
+                <span>{t("p.kicker")}</span>
               </div>
 
               <h3
                 id="product-detail-title"
                 className="text-xl sm:text-2xl font-serif font-bold text-zinc-900 dark:text-zinc-100"
               >
-                {product.name}
+                {name}
               </h3>
 
               <div className="text-xl font-serif font-bold text-amber-600 dark:text-amber-400 mt-1 num" data-ltr>
@@ -193,7 +141,7 @@ function ProductDetailDialog({ product, onClose }: { product: ProductDetail; onC
               </div>
 
               <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-3 leading-relaxed">
-                {product.description}
+                {t(product.descriptionKey)}
               </p>
 
               {/* Artisan Specs (Origin & Roast) */}
@@ -201,15 +149,15 @@ function ProductDetailDialog({ product, onClose }: { product: ProductDetail; onC
                 <div className="flex items-center gap-2">
                   <Compass className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                   <span>
-                    <strong className="text-zinc-900 dark:text-zinc-100">{lang === "ar" ? "المصدر:" : "Origin:"}</strong>{" "}
-                    {product.origin || (lang === "ar" ? "مزارع مباشرة مختارة" : "Single-Origin Direct Trade")}
+                    <strong className="text-zinc-900 dark:text-zinc-100">{t("p.origin")}</strong>{" "}
+                    {t(product.originKey ?? "p.originDefault")}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Flame className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                   <span>
-                    <strong className="text-zinc-900 dark:text-zinc-100">{lang === "ar" ? "درجة التحميص:" : "Roast Level:"}</strong>{" "}
-                    {product.roastLevel || (lang === "ar" ? "تحميص متوسط مخصص" : "Medium-Light Artisan Roast")}
+                    <strong className="text-zinc-900 dark:text-zinc-100">{t("p.roast")}</strong>{" "}
+                    {t(product.roastKey ?? "p.roastDefault")}
                   </span>
                 </div>
               </div>
@@ -219,7 +167,7 @@ function ProductDetailDialog({ product, onClose }: { product: ProductDetail; onC
             <div className="space-y-3 pt-4 border-t border-zinc-100 dark:border-zinc-800">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-mono uppercase tracking-wider text-zinc-500">
-                  {lang === "ar" ? "الكمية" : "Quantity"}
+                  {t("p.qty")}
                 </span>
                 <div className="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 p-1 rounded-full border border-zinc-200 dark:border-zinc-700">
                   <button
@@ -253,16 +201,12 @@ function ProductDetailDialog({ product, onClose }: { product: ProductDetail; onC
                 {isAdded ? (
                   <>
                     <Check className="w-4 h-4" />
-                    <span>{lang === "ar" ? "تمت الإضافة إلى الطلب!" : "Added to Order!"}</span>
+                    <span>{t("b.added")}</span>
                   </>
                 ) : (
                   <>
                     <ShoppingBag className="w-4 h-4" />
-                    <span>
-                      {lang === "ar"
-                        ? `إضافة إلى الطلب ($${totalPrice.toFixed(2)})`
-                        : `Add to Order ($${totalPrice.toFixed(2)})`}
-                    </span>
+                    <span>{tf("hero.fAdd", { price: `$${totalPrice.toFixed(2)}` })}</span>
                   </>
                 )}
               </button>
